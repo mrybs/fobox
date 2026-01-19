@@ -13,8 +13,8 @@ class PostgresCollection(CollectionProtocol):
         return [dict(record) for record in await self.connection._fetch(f'''
             SELECT *
             FROM {self.name}
-            {'WHERE' if _filter else ''} {' AND '.join([f'${i}=${i+1}' for i in range(1, len(_filter)+1)])};''',
-            *sum([[key, val] for key, val in _filter.items()], []))]
+            {'WHERE' if _filter else ''} {' AND '.join([f'{list(_filter.keys())[i]}=${i+1}' for i in range(0, len(_filter))])};''',
+            *_filter.values())]
 
     async def insert(self, _object) -> None: ...
     async def update(self, _filter, _object) -> None: ...
