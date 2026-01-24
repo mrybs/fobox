@@ -1,5 +1,7 @@
 from __future__ import annotations
-from .. import CollectionProtocol, ConnectionProtocol
+from .. import CollectionProtocol, ConnectionProtocol, PoolProtocol
+from ..attributed_dict import AttributedDict
+from ..typemap import typemap as tm
 from typing import Any
 import asyncpg
 
@@ -9,43 +11,47 @@ class PostgresCollection(CollectionProtocol):
         self.connection = connection
         self.name = name
 
-    async def find(self, _filter) -> list[dict]:
-        return [dict(record) for record in await self.connection._fetch(f'''
-            SELECT *
+    async def find(
+        self,
+        _filter: dict,
+        *,
+        fields: tuple[str] = ('*',)) -> list[dict]:
+        return [AttributedDict(record) for record in await self.connection._fetch(f'''
+            SELECT {', '.join(fields)}
             FROM {self.name}
-            {'WHERE' if _filter else ''} {' AND '.join([f'{list(_filter.keys())[i]}=${i+1}' for i in range(0, len(_filter))])};''',
+            {'WHERE ' if _filter else ''}{' AND '.join([f'{list(_filter.keys())[i]}=${i+1}' for i in range(0, len(_filter))])};''',
             *_filter.values())]
 
-    async def insert(self, _object) -> None: ...
+    async def insert(
+        self,
+        _object: dict,
+        *,
+        returning: tuple[str] = (),
+        typemap: dict | None = None) -> None: 
+        return await self.connection._fetch(f'''
+            INSERT INTO {self.name}({', '.join(_object.keys())})
+            VALUES({', '.join([f'${i+1}' for i in range(0, len(_object))])})
+            {'RETURNING' if returning else ''} {', '.join(returning)}''',
+            *tm(_object, typemap).values())
     async def update(self, _filter, _object) -> None: ...
     async def delete(self, _filter) -> None: ...
     async def pop(self, _filter) -> dict: ...
 
 class PostgresConnection(ConnectionProtocol):
-    def __init__(self, pool, autocommit=True):
-        self.pool = pool
-        self.connection
-        self.transaction
-        self.autocommit = autocommit
-    
-    async def __aenter__(self) -> PostgresConnection:
-        self.connection = await self.pool.acquire()
-        self.transaction = self.connection.transaction()
-        await self.transaction.start()
-        return self
-    
-    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
-        if self.autocommit:
-            await self.commit()
-        await self.pool.release(self.connection)
-        del self.__dict__['connection']
-        del self.__dict__['transaction']
+    def __init__(self, pool, connection, transaction, autocommit=True):
+        self._pool = pool
+        self._connection = connection
+        self._transaction = transaction
+        self._autocommit = autocommit
     
     def __getattr__(self, key) -> CollectionProtocol:
         return PostgresCollection(self, key)
     
+    async def rollback(self) -> None:
+        await self._transaction.rollback()
+    
     async def commit(self) -> None:
-        await self.transaction.commit()
+        await self._transaction.commit()
     
     async def collections(self) -> list:
         return [collection[0] for collection in await self._fetch('''
@@ -54,13 +60,42 @@ class PostgresConnection(ConnectionProtocol):
             WHERE table_schema NOT IN ('pg_catalog', 'information_schema') AND table_type = 'BASE TABLE'
             ORDER BY table_name;''')]
     
+    async def __aenter__(self):
+        await self._transaction.start()
+        return self
+    
+    async def __aexit__(self, exc_type, exc_val, exc_tb) -> None:
+        try:
+            if not exc_type and self._autocommit:
+                await self.commit()
+            else:
+                await self.rollback()
+        finally:
+            await self._pool.release(self)
+    
     async def _fetch(self, query, *args, timeout: float | None = None, record_class=None) -> list:
-        return await self.connection.fetch(
+        query = ' '.join([line.strip() for line in query.split('\n')]).strip()
+        #print(query)
+        return await self._connection.fetch(
             query,
             *args,
             timeout=timeout,
-            record_class=None
+            record_class=record_class
         )
+
+class PostgresPool(PoolProtocol):
+    def __init__(self, pool, autocommit=True):
+        self._pool = pool
+        self._autocommit = autocommit
+    
+    async def acquire(self) -> PostgresConnection:
+        connection = await self._pool.acquire()
+        transaction = connection.transaction()
+        return PostgresConnection(self, connection, transaction)
+    
+    async def release(self, connection: PostgresConnection):
+        await self._pool.release(connection._connection)
+        del connection
 
 
 async def Postgres(
@@ -70,8 +105,9 @@ async def Postgres(
         user: str | None = None,
         password: str | None = None,
         database: str | None = None,
-        server_settings: dict | None = None) -> PostgresConnection:
-    return PostgresConnection(
+        server_settings: dict | None = None,
+        autocommit: bool = True) -> PostgresPool:
+    return PostgresPool(
         pool=await asyncpg.create_pool(
             dsn,
             host=host,
@@ -79,5 +115,6 @@ async def Postgres(
             password=password,
             database=database,
             server_settings=server_settings
-        )
+        ),
+        autocommit=autocommit
     )
