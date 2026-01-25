@@ -3,7 +3,9 @@ from .. import CollectionProtocol, ConnectionProtocol, PoolProtocol
 from ..attributed_dict import AttributedDict
 from ..typemap import typemap as tm
 from typing import Any
+from functools import partial
 import asyncpg
+import asyncio
 
 
 class PostgresCollection(CollectionProtocol):
@@ -33,9 +35,25 @@ class PostgresCollection(CollectionProtocol):
             VALUES({', '.join([f'${i+1}' for i in range(0, len(_object))])})
             {'RETURNING' if returning else ''} {', '.join(returning)}''',
             *tm(_object, typemap).values())
-    async def update(self, _filter, _object) -> None: ...
-    async def delete(self, _filter) -> None: ...
-    async def pop(self, _filter) -> dict: ...
+
+    async def update(self, _filter: dict, _object: dict) -> None: ...
+
+    async def delete(self, _filter: dict) -> None: 
+        await self.connection._fetch(f'''
+            DELETE FROM {self.name}
+            {'WHERE ' if _filter else ''}{' AND '.join([f'{list(_filter.keys())[i]}=${i+1}' for i in range(0, len(_filter))])};''',
+            *_filter.values())
+
+    async def pop(self, _filter: dict) -> dict: ...
+    async def count(self, _filter: dict) -> int: 
+        return (await self.connection._fetch(f'''
+            SELECT COUNT(*)
+            FROM {self.name}
+            {'WHERE ' if _filter else ''}{' AND '.join([f'{list(_filter.keys())[i]}=${i+1}' for i in range(0, len(_filter))])};''',
+            *_filter.values()))[0]['count']
+    async def get_size(self) -> int: ...
+    async def drop(self) -> None: ...
+
 
 class PostgresConnection(ConnectionProtocol):
     def __init__(self, pool, connection, transaction, autocommit=True):
@@ -84,11 +102,17 @@ class PostgresConnection(ConnectionProtocol):
         )
 
 class PostgresPool(PoolProtocol):
-    def __init__(self, pool, autocommit=True):
-        self._pool = pool
+    def __init__(self, pool_factory, autocommit=True):
+        self._pool_factory = pool_factory
         self._autocommit = autocommit
+        self._pool = None
+    
+    async def connect(self):
+        self._pool = await self._pool_factory()
     
     async def acquire(self) -> PostgresConnection:
+        if not self._pool:
+            await self.connect()
         connection = await self._pool.acquire()
         transaction = connection.transaction()
         return PostgresConnection(self, connection, transaction)
@@ -98,7 +122,7 @@ class PostgresPool(PoolProtocol):
         del connection
 
 
-async def Postgres(
+def Postgres(
         dsn: Any | None = None,
         *,
         host: str | None = None,
@@ -108,7 +132,8 @@ async def Postgres(
         server_settings: dict | None = None,
         autocommit: bool = True) -> PostgresPool:
     return PostgresPool(
-        pool=await asyncpg.create_pool(
+        partial(
+            asyncpg.create_pool,
             dsn,
             host=host,
             user=user,
