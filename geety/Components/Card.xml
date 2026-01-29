@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<Geety>
+    <Card>
+        <arg name="title"/>
+        <arg 
+            name="Content"
+            def="Lorem Ipsum"/>
+        <arg name="image"/>
+        
+        <img src="$image"/>
+        <h1>$title</h1>
+        <p>$Content</p>
+    
+        <css><![CDATA[
+            p{
+                color: gray;
+            }
+        ]]></css>
+
+    </Card>
+</Geety>
