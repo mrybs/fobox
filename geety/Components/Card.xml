@@ -18,4 +18,8 @@
         ]]></css>
 
     </Card>
+
+    <App>
+        <Card name="Geety test" image="example.png"></Card>
+    </App>
 </Geety>
