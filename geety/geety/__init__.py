@@ -1,13 +1,18 @@
 from __future__ import annotations
 from typing import Optional
 from io import TextIOBase
+from collections.abc import Generator
 from itertools import chain
+from collections import ChainMap
 from xml.etree.ElementTree import XMLPullParser
 from . import exceptions
 import re
 
 
-class App:
+VAR_PATTERN = re.compile(r'\$([\w\.]+)')
+
+
+class Page:
     def __init__(self):
         self._components = {}
         self.entry_point = None
@@ -28,19 +33,18 @@ class App:
              with_headers: bool = True) -> str:
         if not self.entry_point:
             raise exceptions.EntryPointNotSet()
-        if not component:
-            component = self.entry_point
+        
+        body = (component or self.entry_point).render(self._components, {}, ChainMap)
 
-        html = ''
-        if with_headers:
-            html += '<!DOCTYPE html>\n'
-            html += '<html><head></head><body>'
-
-        html += component.html(self._components, {}, {})
-
-        if with_headers:
-            html += '</body></html>'
-        return html
+        if not with_headers:
+            return body
+    
+        return (
+            '<!DOCTYPE html>\n'
+            '<html><head></head><body>'
+            f'{body}'
+            '</body></html>'
+        )
 
 
 class Component:
@@ -56,7 +60,7 @@ class Component:
         self.children = children or []
         self.content = content
     
-    def html(self, components, args, variables):
+    def render(self, components: dict, args: dict, context: ChainMap):
         if self.tag in components:
             signature = {}
             component = components[self.tag]
@@ -65,20 +69,21 @@ class Component:
             for child in component.children:
                 if child.tag == '{Geety}arg':
                     signature[child.args['name']] = child.args.get('def')
-                    variables |= signature | args | self.args
+                    context = context.new_child(ChainMap(signature | args | self.args))
                 else:
-                    for var in variables:
-                        child.args = {key: val.replace(f'${var}', variables[var]) for key, val in child.args.items()}
-                        child.content = child.content.replace(f'${var}', variables[var])
-                    html += child.html(components, {}, variables)
+                    child.args = {
+                        key: VAR_PATTERN.sub(lambda m: str(context.get(m.group(1), m.group(0))), val)
+                        for key, val in child.args.items()
+                    }
+                    child.content = VAR_PATTERN.sub(lambda m: str(context.get(m.group(1), m.group(0))), child.content)
+                    html += child.render(components, {}, context)
             html += component.content
             html += f'</{parent_tag}>'
-            print(signature)
             return html
         else:
             html = f'<{self.tag} {' '.join([f"{key}=\"{val}\"" for key, val in self.args.items()])}>'
             for child in self.children:
-                html += child.html(components)
+                html += child.render(components)
             html += self.content
             html += f'</{self.tag}>'
             return html
@@ -98,20 +103,13 @@ class Component:
                 return component
     
     def find_by_tag(self, tag: str) -> Optional[Component]:
-        if self.tag == tag:
-            return self
-        for child in self.children:
-            if component := child.find_by_tag(tag):
-                return component
-        return None
+        return next(self.find_all_by_tag(tag), None)
 
-    def find_all_by_tag(self, tag: str) -> list[Component]:
-        components = []
+    def find_all_by_tag(self, tag: str) -> Generator[Component]:
         if self.tag == tag:
-            components.append(self)
+            yield self
         for child in self.children:
-            components.extend(child.find_by_tag(tag))
-        return components
+            yield from child.find_all_by_tag(tag)
                     
     def __repr__(self) -> str:
         return f'<Component {self.tag} [{", ".join([f"{key}={val}" for key, val in self.args.items()])}] with {len(self.children)} children "{self.content}">'

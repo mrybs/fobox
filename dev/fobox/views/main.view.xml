@@ -1,0 +1,18 @@
+<?xml version="1.0"?>
+<Geety xmlns:Geety="Geety">
+    <Card>
+        <Geety:arg name="test"/>
+
+        <p>Hello, $test</p>
+    </Card>
+
+    <App>
+        <!--<Geety:Set a="1" b="'$a'" c="'lolkek'" />-->
+
+        <Card test="mrybs"/>
+
+        <p>
+            Hello, world!
+        </p>
+    </App>
+</Geety>
