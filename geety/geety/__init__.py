@@ -3,13 +3,23 @@ from typing import Optional
 from io import TextIOBase
 from collections.abc import Generator
 from itertools import chain
-from collections import ChainMap
 from xml.etree.ElementTree import XMLPullParser
 from . import exceptions
 import re
 
 
 VAR_PATTERN = re.compile(r'\$([\w\.]+)')
+
+
+def var_pattern_apply_content(content, context):
+    return VAR_PATTERN.sub(lambda m: str(context.get(m.group(1), m.group(0))), content)
+
+
+def var_pattern_apply_args(args, context):
+    return {
+        key: eval(var_pattern_apply_content(val, context))
+        for key, val in args.items()
+    }
 
 
 class Page:
@@ -30,11 +40,12 @@ class Page:
     def html(self,
              *,
              component: Component | None = None,
-             with_headers: bool = True) -> str:
+             with_headers: bool = True,
+             context: dict | None = None) -> str:
         if not self.entry_point:
             raise exceptions.EntryPointNotSet()
         
-        body = (component or self.entry_point).render(self._components, {}, ChainMap)
+        body = (component or self.entry_point).render(self._components, context or {})
 
         if not with_headers:
             return body
@@ -60,30 +71,47 @@ class Component:
         self.children = children or []
         self.content = content
     
-    def render(self, components: dict, args: dict, context: ChainMap):
+    def copy(self) -> Component:
+        return Component(
+            tag=self.tag,
+            args=self.args.copy(),
+            children=[child.copy() for child in self.children],
+            content=self.content
+        )
+    
+    def render(self, components: dict, context: dict):
         if self.tag in components:
             signature = {}
             component = components[self.tag]
             parent_tag = component.args.get('{Geety}extends', 'div')
             html = f'<{parent_tag} {' '.join([f"{key}=\"{val}\"" for key, val in component.args.items()])}>'
             for child in component.children:
+                child = child.copy()
                 if child.tag == '{Geety}arg':
                     signature[child.args['name']] = child.args.get('def')
-                    context = context.new_child(ChainMap(signature | args | self.args))
+                    context.update(signature | self.args)
+                elif child.tag == '{Geety}Set':
+                    child.args = var_pattern_apply_args(child.args, context)
+                    context.update(child.args)
+                elif child.tag == '{Geety}For':
+                    element_name, iterable_name = child.args['each'].split(':')
+                    for elem in context[iterable_name]:
+                        for subchild in child.children:
+                            subchild = subchild.copy()
+                            context[element_name] = elem
+                            subchild.args = var_pattern_apply_args(subchild.args, context)
+                            html += subchild.render(components, context.copy())
                 else:
-                    child.args = {
-                        key: VAR_PATTERN.sub(lambda m: str(context.get(m.group(1), m.group(0))), val)
-                        for key, val in child.args.items()
-                    }
-                    child.content = VAR_PATTERN.sub(lambda m: str(context.get(m.group(1), m.group(0))), child.content)
-                    html += child.render(components, {}, context)
+                    child.args = var_pattern_apply_args(child.args, context)
+                    child.content = var_pattern_apply_content(child.content, context)
+                    html += child.render(components, context.copy())
             html += component.content
             html += f'</{parent_tag}>'
             return html
         else:
             html = f'<{self.tag} {' '.join([f"{key}=\"{val}\"" for key, val in self.args.items()])}>'
             for child in self.children:
-                html += child.render(components)
+                html += child.render(components, {})
             html += self.content
             html += f'</{self.tag}>'
             return html

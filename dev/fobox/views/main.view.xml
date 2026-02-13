@@ -1,18 +1,34 @@
 <?xml version="1.0"?>
 <Geety xmlns:Geety="Geety">
-    <Card>
+    <Card class="Card">
+        <style>
+            .Card{
+                background: #ccc;
+                padding: 15px;
+                border-radius: 15px;
+                display: inline-block;
+            }
+        </style>
+
         <Geety:arg name="test"/>
 
-        <p>Hello, $test</p>
+        <div>Hello, $test</div>
     </Card>
 
     <App>
-        <!--<Geety:Set a="1" b="'$a'" c="'lolkek'" />-->
+        <Geety:Set a="1" />
+        <Geety:Set b="'$a'" c="'lolkek'" />
 
-        <Card test="mrybs"/>
+        <Geety:For each="user:users">
+            <Card test="'$user'"/>
+        </Geety:For>
 
         <p>
             Hello, world!
+
+            a=$a
+            b=$b
+            c=$c
         </p>
     </App>
 </Geety>
