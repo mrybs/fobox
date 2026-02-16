@@ -4,28 +4,37 @@ from io import TextIOBase
 from collections.abc import Generator
 from itertools import chain
 from xml.etree import ElementTree as ET
+from urllib.parse import quote
 from . import exceptions
 import re
+import html
 
 
-VAR_PATTERN = re.compile(r'\$([\w\.]+)')
-INSTRUCTIONS = ('{Geety}Arg', '{Geety}Set', '{Geety}For', '{Geety}Content', '{Geety}If')
+VAR_PATTERN = re.compile(r'\$([\w\.]+)(@html|@url)?')
+INSTRUCTIONS = ('{Geety}Arg', '{Geety}Set', '{Geety}For', '{Geety}Content', '{Geety}Switch', '{Geety}If')
 
 
-def var_pattern_apply_content(content, context, components, prevs):
-    context = context.copy()
-    for var in VAR_PATTERN.findall(content):
+def var_pattern_apply_content(content, context, page, prevs):
+    def replacer(match):
+        var = match.group(1)
+        val = None
         if issubclass(type(context.get(var)), Component):
-            context[var] = context[var].render(components, context, prevs)
-    return VAR_PATTERN.sub(lambda m: str({
-        key: val
-        for key, val in context.items()
-    }.get(m.group(1), m.group(0))), content)
+            val = context[var].render(page, context, prevs)
+        else:
+            val = str(context[var])
+        if match.group(2) == '@html':
+            return html.escape(val)
+        elif match.group(2) == '@url':
+            return quote(val)
+        else:
+            return val
+    
+    return VAR_PATTERN.sub(replacer, content)
 
 
-def var_pattern_apply_args(args, context, components, prevs):
+def var_pattern_apply_args(args, context, page, prevs):
     return {
-        key: eval(var_pattern_apply_content(val, context, components, prevs))
+        key: eval(var_pattern_apply_content(val, context, page, prevs))
         for key, val in args.items()
     }
 
@@ -52,41 +61,42 @@ def merge_dicts(sec, pri):
         sec[key] = value
 
 
-def cond_exec(condition, context, components=None, prevs=None):
+def cond_exec(condition, context, page, prevs):
     new_context = {}
-    for var in VAR_PATTERN.findall(condition):
+    for var, _ in VAR_PATTERN.findall(condition):
         if var not in context:
             return False
         if issubclass(type(context[var]), Component):
-            new_context[var] = context[var].render(components, context, prevs)
+            new_context[var] = context[var].render(page, context, prevs)
         elif issubclass(type(context[var]), str):
             new_context[var] = '\'' + context[var] + '\''
         else:
             new_context[var] = context[var]
-    condition = VAR_PATTERN.sub(lambda m: str({
-        key: val
-        for key, val in new_context.items()
-    }.get(m.group(1), m.group(0))), condition)
+    condition = var_pattern_apply_content(condition, new_context, page, prevs)
     return eval(condition)
 
 
 class Page:
     def __init__(self):
-        self._components = {}
+        self.components = {}
         self.entry_point = None
+        self.styles = []
     
     def load(self, file: TextIOBase) -> None:
         for child in parse_component(file).find_by_tag('Geety').children:
             if type(child) is str:
                 continue
-            if child.tag in self._components:
+            if child.tag in self.components:
                 raise exceptions.ComponentAlreadyExists(child.tag)
             child._is_def = True
-            self._components[child.tag] = child
+            self.components[child.tag] = child
     
     def set_entry_point(self,
                         entry_point: str | Component) -> None:
-        self.entry_point = self._components[entry_point] if issubclass(type(entry_point), str) else entry_point
+        self.entry_point = self.components[entry_point] if issubclass(type(entry_point), str) else entry_point
+    
+    def add_style(self, style):
+        self.styles.append(style)
                         
     def html(self,
              *,
@@ -96,14 +106,19 @@ class Page:
         if not self.entry_point:
             raise exceptions.EntryPointNotSet()
         
-        body = (component or self.entry_point).render(self._components, context or {}, [])
+        body = (component or self.entry_point).render(self, context or {})
 
         if not with_headers:
             return body
     
         return (
             '<!DOCTYPE html>\n'
-            '<html><head></head><body>'
+            '<html>'
+            '<head>' \
+            '<meta charset="UTF-8"/>'
+            f'<style>{''.join(self.styles)}</style>'
+            '</head>'
+            '<body>'
             f'{body}'
             '</body></html>'
         )
@@ -136,15 +151,16 @@ class Component:
             _is_def=self._is_def
         )
     
-    def render(self, components: dict, context: dict, prevs: list[Component]) -> str:
+    def render(self, page: Page, context: dict, prevs: list[Component] | None = None) -> str:
         def find_prev(prevs):
             for i in range(1, len(prevs) - 1):
                 if prevs[-i].is_def():
                     return prevs[-i-1]
             return None
         
-        component = components.get(self.tag, self).copy()
-        tag = component.args.get('{Geety}Extends', 'div') if self.tag in components else self.tag
+        prevs = prevs or []
+        component = page.components.get(self.tag, self).copy()
+        tag = component.args.get('{Geety}Extends', 'div') if self.tag in page.components else self.tag
 
         html = ''
         match tag:
@@ -153,7 +169,7 @@ class Component:
                 if type(prev) is RenderedComponent:
                     html += prev.html
             case '{Geety}Set':
-                context.update(var_pattern_apply_args(component.args, context, components, prevs+[self]))
+                context.update(var_pattern_apply_args(component.args, context, page, prevs+[self]))
             case '{Geety}For':
                 element_name, iterable_name = component.args['each'].split(':')
                 if iterable_name == 'Content':
@@ -165,25 +181,33 @@ class Component:
                         context[element_name] = elem
                         for subchild in component:
                             if type(subchild) is str:
-                                html += var_pattern_apply_content(subchild, context, components, prevs+[self])
+                                html += var_pattern_apply_content(subchild, context, page, prevs+[self])
                             else:
                                 subchild = subchild.copy()
-                                html += subchild.render(components, context, prevs+[self])
+                                html += subchild.render(page, context, prevs+[self])
             case '{Geety}If':
-                if cond_exec(self.args.get('cond', 'False'), context, components, prevs):
+                if cond_exec(self.args.get('cond', 'False'), context, page, prevs):
                     for child in self:
                         if type(child) is str:
-                            html += var_pattern_apply_content(child, context, components, prevs+[self])
+                            html += var_pattern_apply_content(child, context, page, prevs+[self])
                         else:
-                            html += child.render(components, context, prevs+[self])
+                            html += child.render(page, context, prevs+[self])
             case '{Geety}Switch':
                 for case in self.find_all_by_tag('{Geety}Case'):
-                    if cond_exec(case.args.get('cond', 'False'), context, components, prevs):
+                    if cond_exec(case.args.get('cond', 'False'), context, page, prevs):
                         for child in case:
                             if type(child) is str:
-                                html += var_pattern_apply_content(child, context, components, prevs+[self])
+                                html += var_pattern_apply_content(child, context, page, prevs+[self])
                             else:
-                                html += child.render(components, context, prevs+[self])
+                                html += child.render(page, context, prevs+[self])
+            case 'style':
+                style = ''
+                for child in self:
+                    if type(child) is str:
+                        style += var_pattern_apply_content(child, context, page, prevs+[self])
+                    else:
+                        style += child.render(page, context, prevs+[self])
+                page.add_style(style)
             case '{Geety}Arg': ...  # skip
             case _:
                 signature = {
@@ -191,21 +215,21 @@ class Component:
                     for arg in component.find_all_by_tag('{Geety}Arg')
                 }
                 if component.is_def():
-                    merge_dicts(signature, var_pattern_apply_args(self.args, context, components, prevs+[self]))
+                    merge_dicts(signature, var_pattern_apply_args(self.args, context, page, prevs+[self]))
                     merge_dicts(context, signature)
-                component.args = var_pattern_apply_args(component.args, context, components, prevs+[self])
+                component.args = var_pattern_apply_args(component.args, context, page, prevs+[self])
                 context.update(component.args)
                 html += f'<{tag} {' '.join([f"{key}=\"{val}\"" for key, val in component.args.items()])}>' if not self.is_def() else ''
-                if self.tag not in components or self.is_def():
+                if self.tag not in page.components or self.is_def():
                     for child in self:
                         if type(child) is str:
-                            html += var_pattern_apply_content(child, context, components, prevs+[self])
+                            html += var_pattern_apply_content(child, context, page, prevs+[self])
                         else:
-                            html += child.render(components, context, prevs+[self])
-                elif self.tag in components and not self.is_def():
-                    html += components[self.tag].copy().render(components, context, prevs+[RenderedComponent.from_component(
+                            html += child.render(page, context, prevs+[self])
+                elif self.tag in page.components and not self.is_def():
+                    html += page.components[self.tag].copy().render(page, context, prevs+[RenderedComponent.from_component(
                         ''.join([
-                                subchild if type(subchild) is str else subchild.render(components, context, prevs)
+                                subchild if type(subchild) is str else subchild.render(page, context, prevs)
                                 for subchild in self
                         ]), self
                     )])
@@ -280,7 +304,7 @@ class RenderedComponent(Component):
             _is_def=self._is_def
         )
 
-    def render(self, components: dict, context: dict, prevs: list[Component]) -> str:
+    def render(self, components: dict, context: dict, prevs: list[Component], meta: dict) -> str:
         return self.html
 
     @staticmethod

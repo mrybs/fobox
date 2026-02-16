@@ -23,5 +23,5 @@ async def index(request: AsyncRequest):
     
     #async with await db.acquire() as conn:
     #    print(await conn.collections())
-    await request.respond(HttpResponse, page.html(context={'users': ['mrybs', '001kpp', 'test']}), content_type='text/html')
+    await request.respond(HttpResponse, page.html(context={'users': ['mrybs', '001kpp', 'test', 'мбырс', 'чинчопа <3']}), content_type='text/html')
 

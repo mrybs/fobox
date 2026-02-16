@@ -46,7 +46,7 @@
             </Geety:Case>
         </Geety:Switch>
 
-        $test
+        $test@url
         <p><Image>
             <Geety:For each="elem:Content">
                 <!--<Geety:Set elem="5"/>-->
@@ -67,7 +67,7 @@
             </Geety:For>
         </ul>
         <div><p>Hi, $test</p></div>
-        <div>$test 9016436</div>
+        <div>$test@html 9016436</div>
     </Card>
 
     <App>
