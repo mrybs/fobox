@@ -29,13 +29,29 @@ class PostgresCollection(CollectionProtocol):
         *,
         returning: tuple[str] = (),
         typemap: dict | None = None) -> None: 
-        return await self.connection._fetch(f'''
-            INSERT INTO {self.name}({', '.join(_object.keys())})
-            VALUES({', '.join([f'${i+1}' for i in range(0, len(_object))])})
-            {'RETURNING' if returning else ''} {', '.join(returning)}''',
+        if not _object:
+            return []
+        return await self.connection._fetch(
+            f'INSERT INTO {self.name}({', '.join(_object.keys())}) '
+            f'VALUES({', '.join([f'${i+1}' for i in range(0, len(_object))])}) '
+            f'{'RETURNING' if returning else ''} {', '.join(returning)}',
             *tm(_object, typemap).values())
 
-    async def update(self, _filter: dict, _object: dict) -> None: ...
+    async def update(
+        self,
+        _filter: dict,
+        _object: dict,
+        *,
+        returning: tuple[str] = (),
+        typemap: dict | None = None) -> None:
+        if not _object:
+            return []
+        return await self.connection._fetch(
+            f'UPDATE {self.name} '
+            f'SET {', '.join([f'{key}=${i+1}' for i, key in enumerate(_object)])} '
+            f'{'WHERE ' if _filter else ''}{' AND '.join([f'{list(_filter.keys())[i]}=${i+len(_object)+1}' for i in range(0, len(_filter))])} '
+            f'{'RETURNING' if returning else ''} {', '.join(returning)};',
+            *tm(_object, typemap).values(), *_filter.values())
 
     async def delete(self, _filter: dict) -> None: 
         await self.connection._fetch(f'''
@@ -43,7 +59,17 @@ class PostgresCollection(CollectionProtocol):
             {'WHERE ' if _filter else ''}{' AND '.join([f'{list(_filter.keys())[i]}=${i+1}' for i in range(0, len(_filter))])};''',
             *_filter.values())
 
-    async def pop(self, _filter: dict) -> dict: ...
+    async def pop(
+        self,
+        _filter: dict,
+        *,
+        returning: tuple[str] = ('*', )) -> dict: 
+        return await self.connection._fetch(
+            f'DELETE FROM {self.name} '
+            f'{'WHERE ' if _filter else ''}{' AND '.join([f'{list(_filter.keys())[i]}=${i+1}' for i in range(0, len(_filter))])} '
+            f'{'RETURNING' if returning else ''} {', '.join(returning)};',
+            *_filter.values())
+
     async def count(self, _filter: dict) -> int: 
         return (await self.connection._fetch(f'''
             SELECT COUNT(*)
@@ -92,7 +118,6 @@ class PostgresConnection(ConnectionProtocol):
     
     async def _fetch(self, query, *args, timeout: float | None = None, record_class=None) -> list:
         query = ' '.join([line.strip() for line in query.split('\n')]).strip()
-        #print(query)
         return await self._connection.fetch(
             query,
             *args,

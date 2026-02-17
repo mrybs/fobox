@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<Geety xmlns:Geety="Geety">
+<Geety xmlns:Geety="Geety" xmlns:DB="DB@1">
     <Image>
         <p>
             <Geety:Content/>
@@ -71,8 +71,30 @@
     </Card>
 
     <App>
+        <Geety:Page title="Демка" favicon="/favicon.png"/>
+
         <Geety:Set a="1"/>
         <Geety:Set b="'$a'" c="'lolkek'"/>
+
+        <DB:Query id="all_users" collection="users">
+            <DB:Insert values="{'name': 'hecker', 'password_hash': '4eburek', 'role_id': 1}" returning="'id'"/>
+            <DB:Find/>
+            <DB:Pop filter="{'id': $all_users.0.id}"/>
+        </DB:Query>
+        <DB:Query id="log" collection="logs">
+            <DB:Insert values="{'message': 'page load'}" returning="'id'"/>
+            <DB:Count filter="{'message': 'page load'}"/>
+        </DB:Query>
+        <DB:Query collection="roles">
+            <DB:Delete filter="{'code': 'banned'}"/>
+        </DB:Query>
+        <DB:Query collection="users">
+            <DB:Update values="{'password_hash': 'lolkek4eburek'}" filter="{'id': 1}"/>
+        </DB:Query>
+
+
+        Это $log.1 загрузка страницы<br/>
+        Всего $log.0.id записей в логах<br/>
 
         <Geety:For each="user:users">
             <Card test="'$user'">
@@ -87,5 +109,24 @@
             b=$b
             c=$c
         </p>
+
+        <div>
+            Users:
+            <ul>
+                <Geety:For each="user:all_users">
+                    <li>
+                        $user
+                        <DB:Query id="role" collection="roles">
+                            <DB:Find filter="{'id': $user.role_id}"/>
+                        </DB:Query>
+                        <ol>
+                            <li>ID: $user.id</li>
+                            <li>Name: $user.name</li>
+                            <li>Role: $role.0.display_name</li>
+                        </ol>
+                    </li>
+                </Geety:For>
+            </ul>
+        </div>
     </App>
 </Geety>
