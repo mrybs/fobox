@@ -1,5 +1,9 @@
 from __future__ import annotations
 from typing import Protocol
+import re
+
+
+DSN_PATTERN = re.compile(r'^(\w+):\/\/\w*:?.*@?.+\/\w+')
 
 
 class CollectionProtocol(Protocol):
@@ -27,3 +31,7 @@ class PoolProtocol(Protocol):
     async def connect(self) -> None: ...
     async def acquire(self) -> ConnectionProtocol: ...
     async def release(self, connection: ConnectionProtocol) -> None: ...
+
+
+def get_driver_name(dsn: str) -> str:
+    return DSN_PATTERN.findall(dsn)[0].lower()

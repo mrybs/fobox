@@ -10,6 +10,9 @@ import sys
 import slinn
 
 
+pp = Preprocessor()
+
+
 class SlinnApiException(Exception): ...
 
 
@@ -47,7 +50,6 @@ class SlinnAPI:
 
     @staticmethod
     def create_app(name: str, hosts: tuple[str] = ()) -> None:
-        pp = Preprocessor()
         ensure_appname = replace_all(name, '-&$#!@%^().,', '_')
         if os.path.isdir(ensure_appname):
             raise AppExistsException(name)
@@ -74,7 +76,7 @@ class SlinnAPI:
         SlinnAPI.update_config()
     
     @staticmethod
-    def create_app_from_template(name, template_name: str, path: str = '.') -> None:
+    def create_app_from_template(name, template_name: str, path: str = '.', templates_folder=slinn.root+'/templates') -> None:
         apppath = (path + '?').replace('/?', '').replace('?', '')
         config = SlinnAPI.get_config()
         if name in config['apps']:
@@ -83,11 +85,16 @@ class SlinnAPI:
         with open('project.json', 'w') as project:
             json.dump(config, project, indent=4)
         try:
-            shutil.copytree(f'{slinn.root}/templates/{template_name}/', f'{apppath}/{name}',
+            shutil.copytree(f'{templates_folder}/{template_name}/', f'{apppath}/{name}',
                             ignore=shutil.ignore_patterns('data'))
+            with open(f'{name}/__init__.py', 'w') as fw:
+                with slinn_root('/defaults/app/__init__.py.template', 'r') as fr:
+                    fw.write(pp.preprocess(fr.read(), {
+                        'appname': name
+                    }))
             os.makedirs(f'{apppath}/templates_data', exist_ok=True)
             try:
-                shutil.copytree(f'{slinn.root}/templates/{template_name}/data/',
+                shutil.copytree(f'{templates_folder}/{template_name}/data/',
                                 f'{apppath}/templates_data/{template_name}')
             except (FileExistsError, FileNotFoundError):
                 pass
@@ -173,6 +180,7 @@ class SlinnAPI:
     def restart():
         args = [sys.executable] + [sys.argv[0]] + sys.argv[1:]
         os.execv(sys.executable, args)
+        os._exit(0)
 
 
 if __name__ == '__main__':

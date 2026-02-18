@@ -8,29 +8,17 @@ import orm
 
 
 class Page:
-    def __init__(self):
-        self.components = {}
+    def __init__(self, components, db_pools):
+        self.components = components
+        self.db_pools = db_pools
         self.entry_point = None
         self.styles = []
-        self.db_pools = []
         self.title = 'Geety Page'
         self.favicon = None
-    
-    def load(self, file: TextIOBase) -> None:
-        for child in parse_component(file).find_by_tag('Geety').children:
-            if type(child) is str:
-                continue
-            if child.tag in self.components:
-                raise exceptions.ComponentAlreadyExists(child.tag)
-            child._is_def = True
-            self.components[child.tag] = child
     
     def set_entry_point(self,
                         entry_point: str | Component) -> None:
         self.entry_point = self.components[entry_point] if issubclass(type(entry_point), str) else entry_point
-    
-    def add_database_pool(self, pool: orm.PoolProtocol):
-        self.db_pools.append(pool)
     
     def add_style(self, style):
         self.styles.append(style)

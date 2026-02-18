@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<Geety xmlns:Geety="Geety">
+    <App>
+        <HelloWorld/>
+    </App>
+</Geety>

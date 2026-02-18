@@ -15,3 +15,7 @@ async def code_413(request: AsyncRequest):
 @hcdp(400)
 async def code_400(request: AsyncRequest):
     await request.respond(HttpResponse, '400 Bad Request', status='400 Bad Request')
+
+@hcdp(403)
+async def code_403(request: AsyncRequest):
+    await request.respond(HttpResponse, '403 Forbidden', status='400 Bad Request')
