@@ -1,15 +1,18 @@
 from slinn import ApiDispatcher, AsyncRequest, HttpResponse, Storage, AnyFilter
 from orm.postgres import Postgres
 from orm import get_driver_name
+from slinn_api import SlinnAPI
 from . import app
 import geety as G
 import re
 
 
 dp = ApiDispatcher()
-gapp = G.App()
+gapp = G.App(context={
+    'PNAME': SlinnAPI.get_config()['name']
+})
 
-for db in app.config['dbs']:
+for db in SlinnAPI.get_config()['dbs']:
     match get_driver_name(db['dsn']):
         case 'postgres':
             gapp.add_database_pool(Postgres(
@@ -18,7 +21,7 @@ for db in app.config['dbs']:
             ))
 
 views = Storage(app.path + '/views')
-components = Storage(app.path + '/components')
+components = Storage(app.path + '/../components')
 for component_file in components.listdir('.'):
     if components.isfile(component_file):
         with components(component_file, 'r') as component:

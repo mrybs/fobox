@@ -1,0 +1,126 @@
+<?xml version="1.0"?>
+<Geety xmlns:G="Geety">
+    <View>
+        <FoboxBase/>
+        <G:Page title="Регистрация | $PNAME"/>
+
+        <style>
+            html, body{
+                height: 100%;
+            }
+            *:has(>.content){
+                align-items: center; 
+            }
+            .content{
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            .content>a{
+                font-size: 13px;
+            }
+            form{
+                width: 390px;
+                max-width: 390px;
+            }
+            input{
+                border: 1px solid var(--border);
+            }
+            input[type="submit"]{
+                font-size: 16px;
+                text-align: center;
+                width: stretch;
+                width: -moz-available;
+                width: -webkit-fill-available;
+                background: var(--button-background);
+                padding: 5px;
+                border-radius: 10px;
+                margin: 5px;
+                cursor: pointer;
+            }
+            input[type="text"], input[type="password"]{
+                background: var(--button-background);
+                outline: none;
+                padding: 5px;
+                margin: 2px 5px;
+                border-radius: 10px;
+                font-size: 16px;
+            }
+            input[type="text"]:focus, input[type="password"]:focus{
+                border: 1px solid var(--accent-color);
+            }
+            a{
+                width: 380px;
+                text-align: left;
+                user-select: none;
+            }
+            div:has(>input[type="checkbox"]){
+                margin: 5px;
+            }
+            input[type="checkbox"]{
+                margin-right: 5px;
+            }
+            form>*{
+                width: stretch;
+                width: -moz-available;
+                width: -webkit-fill-available;
+            }
+            div:has(#code){
+                display: flex;
+                align-items: center;
+            }
+            div:has(#code)>div>label{
+                margin-left: 10px;
+                width: 30px;
+            }
+            #code{
+                width: stretch;
+                width: -moz-available;
+                width: -webkit-fill-available;
+            }
+            input[type="button"]{
+                font-size: 13px;
+                text-align: center;
+                background: var(--button-background);
+                padding: 5px;
+                border-radius: 10px;
+                margin: 2px 5px;
+                cursor: pointer;
+                white-space: nowrap;
+                width: 130px;
+            }
+        </style>
+
+        <script>
+            async function send_code(){
+                await G.POST(
+                    '/auth/send_code',
+                    {
+                        'Content-Type': 'application/json'
+                    },
+                    JSON.stringify({ email: G.$('#email').value})
+                )
+            }
+        </script>
+
+        <Content>
+            <h2>Создать аккаунт $PNAME</h2>
+            <form action="''" method="'POST'" autocomplete="'off'">
+                <input type="'text'" placeholder="'Имя'" name="'name'" id="'name'" required="'true'"/>
+                <input type="'text'" placeholder="'Почта'" name="'email'" id="'email'" required="'true'"/>
+                <div>
+                    <input type="'button'" value="'Отправить код'" onclick="'send_code()'"/>
+                    <div><label for="'code'">F-</label></div>
+                    <input type="'text'" placeholder="'Код с почты'" name="'code'" id="'code'" maxlength="6" required="'true'"/>
+                </div>
+                <input type="'password'" placeholder="'Пароль'" name="'password'" required="'true'"/>
+                <input type="'password'" placeholder="'Повторите пароль'" name="'repeated-password'" required="'true'"/>
+                <div>
+                    <input type="'checkbox'" name="'foreign_device'" id="'foreign_device'"/><label for="'foreign_device'">чужое устройство</label>
+                </div>
+                <input type="'submit'" value="'Создать аккаунт'" />
+            </form>
+            <a href="'/auth'">Есть аккаунт? Войти</a>
+        </Content>
+    </View>
+</Geety>

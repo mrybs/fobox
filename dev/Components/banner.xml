@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<Geety xmlns:G="Geety">
+    <Banner class="'banner'">
+        <style>
+            .banner{
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                min-height: 150px;
+                text-align: center;
+                font-size: 20px;
+            }
+        </style>
+
+        <G:Content/>
+    </Banner>
+</Geety>

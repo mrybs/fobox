@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<Geety xmlns:G="Geety" xmlns:DB="DB@1">
+    <View>
+        <FoboxBase/>
+        <G:Page
+            title="Редактор сайта | Fobox"
+            robots="noindex, nofollow"/>
+        <Header>
+            <h1 onclick="'G.redirect(`/fobox`)'">fobox</h1>
+            <span><span class="'material-symbols-outlined'">person</span>$USER.name</span>
+        </Header>
+
+        <style>
+            #editor{
+                display: flex;
+                min-height: calc(100vh - 68px)
+            }
+            .pane{
+                height: max-content;
+                border-right: 1px solid var(--border);
+                text-align: center;
+                height: auto;
+            }
+            .pane:last-of-type{
+                border-right: none;
+            }
+            .pane[placeholder]{
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            #components-pane{
+                width: max(200px, 15%);
+            }
+            #site-pane{
+                width: stretch;
+                width: -moz-available;
+                width: -webkit-fill-available;
+                background: var(--bg-color);
+            }
+            #properties-pane{
+                width: max(250px, 20%);
+            }
+        </style>
+
+        <div id="'editor'">
+            <div id="'components-pane'" class="'pane'">
+                <G:For each="comp:COMPONENTS">
+                    <LICard>
+                        $comp.name
+                    </LICard>
+                </G:For>
+            </div>
+            <div id="'site-pane'" class="'pane'" placeholder="1">
+                Сайт
+            </div>
+            <div id="'properties-pane'" class="'pane'" placeholder="1">
+                Свойства
+            </div>
+        </div>
+    </View>
+</Geety>

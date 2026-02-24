@@ -1,0 +1,29 @@
+<?xml version="1.0"?>
+<Geety xmlns:G="Geety">
+    <Content class="'content'">
+        <style>
+            *:has(>.content){
+                display: flex;
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            .content{
+                background: var(--bg-color);
+                padding: 10px;
+                z-index: 0;
+                margin: 15px;
+                border-radius: 20px;
+                max-width: 768px;
+                width: stretch;
+                width: -moz-available;
+                width: -webkit-fill-available;
+            }
+            .content h2{
+                margin-bottom: 10px;
+                font-size: 1.2em;
+                padding: 4px 0;
+            }
+        </style>
+        <G:Content/>
+    </Content>
+</Geety>

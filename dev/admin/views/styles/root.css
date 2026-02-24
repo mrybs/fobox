@@ -1,0 +1,90 @@
+:root {
+    --text-color: #000000;
+    --bg-color: #ffffff;
+    --secondary-bg: #ececec;
+    --button-background: #cecece;
+    --active-button-background: #39393f;
+    --gray-text-color: #404040;
+    --overlay-background-color: #2121219f;
+    --placeholder-background-color: #7f7f7f;
+    --navbar-background-color: #1a1a1ebf;
+    --border: #80808c;
+    --blur-border: #80808c55;
+
+    --accent-color: #007bff;
+    --accent-transparent-color: #007bff7F;
+    --accent-text-color: #ffffff;
+    
+    --toast-background-color: #2121219f;
+    --toast-foreground-color: #ffffff9f;
+
+    --link-button-background: #121214;
+
+    --cost-background: #bb803c;
+    --cost-text: #663d00;
+
+    --good-background: #22dd44;
+    --good-text: #007000;
+
+    --error-background: #ffcccc;
+    --error-text: #aa4422;
+
+    --large-button-background1: #FCF2DE;
+    --large-button-text1: #8C826E;
+    --large-button-background2: #CCFBD9;
+    --large-button-text2: #5C8B69;
+
+    --ava-placeholder-color1: #878EFC;
+    --ava-placeholder-color2: #E7B1F5;
+    --ava-outline-color1: #11F1EE;
+    --ava-outline-color2: #0893DD;
+}
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    word-wrap: break-word;
+    font-weight: 400;
+    font-family: 'Ubuntu';
+}
+h1{
+    margin-top: 15px;
+    user-select: none;
+}
+h2{
+    font-weight: 550;
+    user-select: none;
+}
+html, body {
+    color: var(--text-color);
+    background: var(--secondary-bg);
+    width: 100%;
+}
+a{
+    color: var(--text-color)
+}
+.emoji{
+    vertical-align: sub;
+    width: 18px;
+    height: 18px;
+    cursor: text;
+}
+.material-symbols-outlined{
+    user-select: none;
+}
+body::-webkit-scrollbar {
+  width: 12px;
+}
+body::-webkit-scrollbar-track {
+  background: var(--bg-color);
+  border-radius: 5px;
+}
+body::-webkit-scrollbar-thumb {
+    background: var(--gray-text-color);
+    border-radius: 6px;
+    scrollbar-width: thin;
+    border: 2px solid var(--bg-color);
+}
+body::-webkit-scrollbar-thumb:hover {
+  background: var(--text-color);
+}

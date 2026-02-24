@@ -8,6 +8,7 @@ from .utils import list_strip, merge_dicts, get_nested_value
 import html
 import re
 import orm
+import datetime
 
 
 VAR_PATTERN = re.compile(r'\$([\w\.]+)(@html|@url)?')
@@ -17,10 +18,13 @@ DB_OP_PATTERN = re.compile(r'^\{DB@([0-9]+)\}([\w\.]+)$')
 
 
 async def var_pattern_apply_content(content, context, page, prevs):
+    if not content:
+        return content
+
     context = context.copy()
     pp_context = {}
     for var, _ in VAR_PATTERN.findall(content):
-        if '.' in var:
+        if '.' in var and var not in context:
             context[var] = get_nested_value(context[var.split('.')[0]], '.'.join(var.split('.')[1:]))
         if issubclass(type(context.get(var)), Component):
             pp_context[var] = await context[var].render(page, context, prevs)
@@ -39,16 +43,25 @@ async def var_pattern_apply_content(content, context, page, prevs):
     return VAR_PATTERN.sub(replacer, content)
 
 
-async def var_pattern_apply_args(args, context, page, prevs):
+async def var_pattern_apply_args(args: dict, context: dict, page: 'Page', prevs: list[Component]) -> dict:
     return {
-        key: eval(await var_pattern_apply_content(val, context, page, prevs))
+        key: await var_pattern_apply_content(val, context, page, prevs)
+        for key, val in args.items()
+    }
+
+def eval_args(args: dict) -> dict:
+    return {
+        key: eval(val) if type(val) in (str, bytes) else val
         for key, val in args.items()
     }
 
 
-async def cond_exec(condition, context, page, prevs):
+async def cond_exec(condition: str, context: dict, page: 'Page', prevs: list[Component]):
+    context = context.copy()
     new_context = {}
     for var, _ in VAR_PATTERN.findall(condition):
+        if '.' in var:
+            context[var] = get_nested_value(context[var.split('.')[0]], '.'.join(var.split('.')[1:]))
         if var not in context:
             return False
         if issubclass(type(context[var]), Component):
@@ -97,6 +110,8 @@ class Component:
         prevs = prevs or []
         component = page.components.get(self.tag, self).copy()
         tag = component.args.get('{Geety}Extends', 'div') if self.tag in page.components else self.tag
+        sargs = await var_pattern_apply_args(self.args, context, page, prevs+[self])
+        cargs = await var_pattern_apply_args(component.args, context, page, prevs+[self])
 
         html = ''
         match tag:
@@ -105,7 +120,7 @@ class Component:
                 if type(prev) is RenderedComponent:
                     html += prev.html
             case '{Geety}Set':
-                context.update(await var_pattern_apply_args(component.args, context, page, prevs+[self]))
+                context.update(eval_args(sargs))
             case '{Geety}For':
                 element_name, iterable_name = component.args['each'].split(':')
                 if iterable_name == 'Content':
@@ -137,10 +152,30 @@ class Component:
                             else:
                                 html += await child.render(page, context, prevs+[self])
             case '{Geety}Page':
-                if 'title' in self.args:
-                    page.set_title(self.args['title'])
-                if 'favicon' in self.args:
-                    page.set_favicon(self.args['favicon'])
+                if 'title' in sargs:
+                    page.set_title(sargs['title'])
+                if 'description' in sargs:
+                    page.set_description(sargs['description'])
+                if 'image' in sargs:
+                    page.set_image(sargs['image'])
+                if 'type' in sargs:
+                    page.set_type(sargs['type'])
+                if 'card' in sargs:
+                    page.set_card(sargs['card'])
+                if 'favicon' in sargs:
+                    page.set_favicon(sargs['favicon'])
+                if 'canonical' in sargs:
+                    page.set_canonical(sargs['canonical'])
+                if 'locale' in sargs:
+                    page.set_locale(sargs['locale'])
+                if 'keywords' in sargs:
+                    page.set_keywords(sargs['keywords'])
+                if 'author' in sargs:
+                    page.set_author(sargs['author'])
+                if 'viewport' in sargs:
+                    page.set_viewport(sargs['viewport'])
+                if 'robots' in sargs:
+                    page.set_robots(sargs['robots'])
             case 'style':
                 style = ''
                 for child in self:
@@ -149,6 +184,13 @@ class Component:
                     else:
                         style += await child.render(page, context, prevs+[self])
                 page.add_style(style)
+            case 'base':
+                if 'href' in cargs:
+                    page.set_base_href(cargs['href'])
+                if 'target' in cargs:
+                    page.set_base_target(cargs['target'])
+            case 'link':
+                page.add_link(cargs.copy())
             case tag if DB_QUERY_PATTERN.fullmatch(tag):
                 cont_index = int(DB_OP_PATTERN.findall(tag)[0][0])
                 query_id = self.args.get('id')
@@ -166,24 +208,36 @@ class Component:
                         op_index = int(op_index)
                         if cont_index != op_index:
                             raise exceptions.DBContextMismatch(cont_index, op_index, op_name)
-                        op_args = await var_pattern_apply_args(command.args, context, page, prevs+[self])
+                        cmd_args = await var_pattern_apply_args(command.args, context, page, prevs+[self])
+                        _op_args = cmd_args.copy()
+                        _op_args.pop('order', None)
+                        _op_args.pop('fields', None)
+                        _op_args.pop('returning', None)
+                        op_args = eval_args(_op_args)
                         match op_name:
                             case 'Find':
                                 result += await collection.find(
                                     op_args.get('filter', {}),
                                     fields=[
                                         field.strip() for field in 
-                                        command.args.get('fields', '*').split(',')
+                                        cargs.get('fields', '*').split(',')
+                                    ],
+                                    order=[
+                                        orm.Order.ASC(o[1].strip()) if o[0].strip().lower() == 'asc' else orm.Order.DESC(o[1].strip())
+                                        for o in [
+                                            field.strip().split() for field in 
+                                            cmd_args.get('order', '').split(',')
+                                        ]
                                     ]
                                 )
                             case 'Insert':
-                                result += await collection.insert(
+                                result.append(await collection.insert(
                                     op_args.get('values', {}),
                                     returning=[
                                         field.strip() for field in 
-                                        op_args.get('returning', '').split(',')
+                                        cargs.get('returning', '').split(',')
                                     ]
-                                )
+                                ))
                             case 'Count':
                                 result.append(await collection.count(
                                     op_args.get('filter', {})
@@ -198,7 +252,7 @@ class Component:
                                     op_args.get('values', {}),
                                     returning=[
                                         field.strip() for field in 
-                                        op_args.get('returning', '').split(',')
+                                        cargs.get('returning', '').split(',')
                                         if field.strip()
                                     ]
                                 )
@@ -207,20 +261,20 @@ class Component:
                                     op_args.get('filter', {}),
                                     returning=[
                                         field.strip() for field in 
-                                        op_args.get('returning', '').split(',')
+                                        cargs.get('returning', '').split(',')
                                         if field.strip()
                                     ]
                                 )
             case '{Geety}Arg': ...  # skip
             case _:
-                signature = {
+                signature = eval_args(await var_pattern_apply_args({
                     arg.args['name']: arg.args.get('def')
                     for arg in component.find_all_by_tag('{Geety}Arg')
-                }
+                }, context, page, prevs+[self]))
                 if component.is_def():
-                    merge_dicts(signature, await var_pattern_apply_args(self.args, context, page, prevs+[self]))
+                    merge_dicts(signature, eval_args(await var_pattern_apply_args(self.args, context, page, prevs+[self])))
                     merge_dicts(context, signature)
-                component.args = await var_pattern_apply_args(component.args, context, page, prevs+[self])
+                component.args = eval_args(await var_pattern_apply_args(component.args, context, page, prevs+[self]))
                 context.update(component.args)
                 html += f'<{tag} {' '.join([f"{key}=\"{val}\"" for key, val in component.args.items()])}>' if not self.is_def() else ''
                 if self.tag not in page.components or self.is_def():
@@ -232,7 +286,7 @@ class Component:
                 elif self.tag in page.components and not self.is_def():
                     html += await page.components[self.tag].copy().render(page, context, prevs+[RenderedComponent.from_component(
                         ''.join([
-                                subchild if type(subchild) is str else await subchild.render(page, context, prevs)
+                                await var_pattern_apply_content(subchild, context, page, prevs+[self]) if type(subchild) is str else await subchild.render(page, context, prevs)
                                 for subchild in self
                         ]), self
                     )])

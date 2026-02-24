@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<Geety xmlns:G="Geety">
+    <Header id="'header'">
+        <style>
+            #header{
+                padding: 8px;
+                border-bottom: 1px solid var(--border);
+            }
+            #header>*{
+                margin: 0;
+                font-size: 24px;
+                font-weight: 900;
+            }
+        </style>
+        <G:Content/>
+    </Header>
+</Geety>

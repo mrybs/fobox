@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<Geety xmlns:G="Geety">
+    <View>
+        <FoboxBase/>
+        <G:Page title="Авторизация | $PNAME"/>
+
+        <style>
+            html, body{
+                height: 100%;
+            }
+            *:has(>.content){
+                align-items: center; 
+            }
+            .content{
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+            .content>a{
+                font-size: 13px;
+            }
+            form{
+                width: 260px;
+            }
+            input{
+                border: 1px solid var(--border);
+            }
+            input[type="submit"]{
+                font-size: 16px;
+                text-align: center;
+                width: stretch;
+                width: -moz-available;
+                width: -webkit-fill-available;
+                background: var(--button-background);
+                padding: 5px;
+                border-radius: 10px;
+                margin: 5px;
+                cursor: pointer;
+            }
+            input[type="text"], input[type="password"]{
+                background: var(--button-background);
+                outline: none;
+                padding: 5px;
+                margin: 2px 5px;
+                border-radius: 10px;
+                font-size: 16px;
+                width: stretch;
+                width: -moz-available;
+                width: -webkit-fill-available;
+            }
+            input[type="text"]:focus, input[type="password"]:focus{
+                border: 1px solid var(--accent-color);
+            }
+            a{
+                width: 250px;
+                text-align: left;
+                user-select: none;
+            }
+            div:has(>input[type="checkbox"]){
+                margin: 5px;
+            }
+            input[type="checkbox"]{
+                margin-right: 5px;
+            }
+        </style>
+
+        <G:If cond="$GET_ARGS.message">
+            <ErrorBox>$GET_ARGS.message</ErrorBox>
+        </G:If>
+        <Content>
+            <h2>Вход $PNAME</h2>
+            <form action="''" method="'POST'">
+                <input type="'text'" placeholder="'Почта или ID'" name="'login'" required="'true'"/>
+                <input type="'password'" placeholder="'Пароль'" name="'password'" required="'true'"/>
+                <div>
+                    <input type="'checkbox'" name="'foreign_device'" id="'foreign_device'"/><label for="'foreign_device'">чужое устройство</label>
+                </div>
+                <input type="'submit'" value="'Войти'" />
+            </form>
+            <a href="'/auth/signup'">Нет аккаунта? Создать</a>
+            <a href="'/auth/restore'">Забыли пароль? Восстановить</a>
+        </Content>
+    </View>
+</Geety>

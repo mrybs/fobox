@@ -8,9 +8,10 @@ import orm
 
 
 class App:
-    def __init__(self):
+    def __init__(self, *, context: dict | None):
         self.db_pools = []
         self.components = {}
+        self.context = context or {}
     
     @staticmethod
     def _load_file(file: TextIOBase, components_list: Iterable[str]) -> None:
@@ -31,4 +32,4 @@ class App:
         self.db_pools.append(pool)
 
     def new_page(self, page_file):
-        return Page(self.components | App._load_file(page_file, self.components.keys()), self.db_pools)
+        return Page(self.components | App._load_file(page_file, self.components.keys()), self.db_pools, context=self.context)

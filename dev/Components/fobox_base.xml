@@ -1,0 +1,19 @@
+<?xml version="1.0"?>
+<Geety xmlns:G="Geety">
+    <FoboxBase>
+        <G:Page locale="ru_RU"/>
+        <link href="/styles/root.css" rel="stylesheet" type="text/css"/>
+        <script src="'/scripts/geety.js'"></script>
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+        <script>
+            var G = new Geety()
+        </script> 
+        <style>
+            body{margin:0;padding:0;font-family:sans-serif;}
+            #header{display:flex;justify-content:space-between;align-items:center;}
+            #header>h1{cursor:pointer;width:fit-content;}
+            #header>span{font-size:16px;font-weight:450;}
+            .material-symbols-outlined{font-size:22px;vertical-align:sub;}
+        </style>
+    </FoboxBase>
+</Geety>

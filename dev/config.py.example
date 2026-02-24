@@ -1,2 +1,0 @@
-DB_DSN = 'postgres://USER:PASSWORD@HOST/DATABASE'
-DB_SETTINGS = {'search_path': 'public'}

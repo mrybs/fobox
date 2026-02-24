@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<Geety xmlns:G="Geety">
+    <WideButton class="'widebutton'" onclick="'$onclick'">
+        <G:Arg name="onclick"/>
+        <G:Arg name="label"/>
+
+        <style>
+            .widebutton{
+                background: var(--button-background);
+                text-align: center;
+                padding: 10px;
+                margin: 5px;
+                border-radius: 15px;
+                font-weight: 500;
+                cursor: pointer;
+            }
+        </style>
+
+        $label
+    </WideButton>
+</Geety>

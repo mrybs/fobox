@@ -70,7 +70,7 @@
         <div>$test@html 9016436</div>
     </Card>
 
-    <App>
+    <View>
         <Geety:Page title="Демка" favicon="/favicon.png"/>
 
         <Geety:Set a="1"/>
@@ -128,5 +128,5 @@
                 </Geety:For>
             </ul>
         </div>
-    </App>
+    </View>
 </Geety>

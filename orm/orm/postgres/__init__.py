@@ -2,7 +2,8 @@ from __future__ import annotations
 from .. import CollectionProtocol, ConnectionProtocol, PoolProtocol
 from ..attributed_dict import AttributedDict
 from ..typemap import typemap as tm
-from typing import Any
+from ..order import OrderType
+from typing import Any, Coroutine
 from functools import partial
 import asyncpg
 
@@ -16,12 +17,25 @@ class PostgresCollection(CollectionProtocol):
         self,
         _filter: dict,
         *,
-        fields: tuple[str] = ('*',)) -> list[dict]:
-        return [AttributedDict(record) for record in await self.connection._fetch(f'''
-            SELECT {', '.join(fields)}
-            FROM {self.name}
-            {'WHERE ' if _filter else ''}{' AND '.join([f'{list(_filter.keys())[i]}=${i+1}' for i in range(0, len(_filter))])};''',
+        fields: tuple[str] = ('*',),
+        order: tuple[tuple[OrderType, str]] = ()) -> list[dict]:
+        return [AttributedDict(record) for record in await self.connection._fetch(
+            f'SELECT {', '.join(fields)} '
+            f'FROM {self.name} '
+            f'{'WHERE ' if _filter else ''}{' AND '.join([f'{list(_filter.keys())[i]}=${i+1}' for i in range(0, len(_filter))])} '
+            f'{'ORDER BY ' if order else ''}{', '.join([(f'{o[1]} {'ASC' if o[0] is OrderType.ASC else 'DESC'}') for o in order])};',
             *_filter.values())]
+
+    async def find_one(
+            self,
+            _filter: dict,
+            *,
+            fields: tuple[str] = ('*',)) -> dict:
+        result = await self.find(
+            _filter,
+            fields=fields
+        )
+        return result[0] if result else None
 
     async def insert(
         self,
@@ -31,11 +45,12 @@ class PostgresCollection(CollectionProtocol):
         typemap: dict | None = None) -> None: 
         if not _object:
             return []
-        return await self.connection._fetch(
+        records = await self.connection._fetch(
             f'INSERT INTO {self.name}({', '.join(_object.keys())}) '
             f'VALUES({', '.join([f'${i+1}' for i in range(0, len(_object))])}) '
             f'{'RETURNING' if returning else ''} {', '.join(returning)}',
             *tm(_object, typemap).values())
+        return records[0] if records else None
 
     async def update(
         self,
@@ -130,6 +145,7 @@ class PostgresPool(PoolProtocol):
         self._pool_factory = pool_factory
         self._autocommit = autocommit
         self._pool = None
+        self._tasks = []
     
     async def connect(self):
         self._pool = await self._pool_factory()
@@ -139,11 +155,18 @@ class PostgresPool(PoolProtocol):
             await self.connect()
         connection = await self._pool.acquire()
         transaction = connection.transaction()
-        return PostgresConnection(self, connection, transaction)
+        pg_conn = PostgresConnection(self, connection, transaction)
+        tasks, self._tasks = self._tasks, []
+        for task in tasks:
+            await task(pg_conn)
+        return pg_conn
     
     async def release(self, connection: PostgresConnection):
         await self._pool.release(connection._connection)
         del connection
+    
+    def on_acquire(self, coroutine: Coroutine[ConnectionProtocol]) -> None:
+        self._tasks.append(coroutine)
 
 
 def Postgres(
