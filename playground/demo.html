@@ -11,12 +11,13 @@
     <style>
         :root {
             --editor-highlight: cyan;
+            --editor-backlight: red;
             --editor-highlight-properties-opened: magenta;
             --editor-border: #99a;
             --editor-trash-bg: #fcc;
             --editor-trash-fg: #966;
             --editor-trash-border: #c99;
-            --editor-context-menu-bg: #d0d0d7;
+            --editor-context-menu-bg: #d0d0d7af;
             --editor-fg: #000;
             --editor-danger-fg: #e22;
         }
@@ -84,6 +85,7 @@
             border-bottom-left-radius: 5px;
             border-bottom-right-radius: 5px;
             border: 1px solid var(--editor-highlight);
+            transition: box-shadow .2s ease;
         }
         .editor-component[properties-opened]>.editor-component-content{
             border: 1px solid var(--editor-highlight-properties-opened);
@@ -132,9 +134,12 @@
             user-select: none;
             border-radius: 10px;
             background: var(--editor-context-menu-bg);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px); 
+            font-size: 14px;
         }
         #editor-context-menu>div{
-            margin: 5px;
+            margin: 7px;
         }
         .editor-context-menu-icon{
             font-size: 16px;
@@ -150,6 +155,13 @@
             BOTTOM: 'BOTTOM',
             INSIDE: 'INSIDE'
         })
+        const OuterBacklight = Object.freeze({
+            LEFT: '-10px 0 5px -5px var(--editor-backlight)',
+            TOP: '0 -10px 5px -5px var(--editor-backlight)',
+            RIGHT: '10px 0 5px -5px var(--editor-backlight)',
+            BOTTOM: '0 10px 5px -5px var(--editor-backlight)'
+        })
+        const InnerBacklight = 'inset 0 0 5px 2px var(--editor-backlight)';
         const PropertyTypes = Object.freeze({
             TEXT: 'TEXT',
             COLOR: 'COLOR',
@@ -236,7 +248,6 @@
                     <span class="material-symbols-outlined editor-context-menu-icon">${element.icon}</span>
                     <span>${element.label}</span>
                 `
-                console.log(element, element.color)
                 element_element.style.color = element.color
                 element_element.onclick = event => {
                     element.onclick(event)
@@ -250,7 +261,9 @@
         }
 
         function hideContextMenu () {
-            document.contextMenu.style.display = 'none'
+            if (document.hasOwnProperty('contextMenu')){
+                document.contextMenu.style.display = 'none'
+            }
         }
 
 
@@ -310,6 +323,7 @@
                 this.body.onclick = this.header.onclick = event => {
                     event.stopPropagation()
                     hideContextMenu()
+                    if (this.isInPalletes()) return
                     this.canvas.properties.display(this)
                 }
 
@@ -325,10 +339,27 @@
                     this.container_element = this.body.querySelector(this.container)
                     this.element.ondragover = event => {
                         event.preventDefault()
+                        event.stopPropagation()
+                        const target_component = this.canvas.getComponentById(getComponentId(event.target))
+                        const closest = getClosestWithSide(this.container_element, event.clientX, event.clientY);
+                        if (closest.element && closest.side !== Sides.INSIDE) {
+                            this.canvas.getComponentById(getComponentId(closest.element)).setOuterBacklight(closest.side)
+                        } else {
+                            this.setInnerBacklight()
+                        }
+                    }
+                    this.element.ondragleave = event => {
+                        event.stopPropagation()
+                        if (this.canvas.backlight_component !== null){
+                            this.canvas.backlight_component.setOuterBacklight(null)
+                        }
                     }
                     this.element.ondrop = event => {
                         event.preventDefault()
                         event.stopPropagation()
+                        if (this.canvas.backlight_component !== null){
+                            this.canvas.backlight_component.setOuterBacklight(null)
+                        }
                         if (this.canvas.isComponentInPalletesById(this.id)) return
                         const id = event.dataTransfer.getData('plain/text')
                         const target_component = this.canvas.getComponentById(getComponentId(event.target))
@@ -426,6 +457,28 @@
                 this.canvas.components.delete(this.id)
                 this.canvas.properties.display(this.canvas.root_component)
             }
+
+            isInPalletes () {
+                return this.canvas.isComponentInPalletesById(this.id)
+            }
+
+            setOuterBacklight (side) {
+                if (this.isInPalletes()) return
+                if (this.canvas.backlight_component !== null) {
+                    this.canvas.backlight_component.body.style.boxShadow = ''
+                }
+                this.canvas.backlight_component = this
+                this.body.style.boxShadow = side === null ? '' : OuterBacklight[side]
+            }
+
+            setInnerBacklight (enabled=true) {
+                if (this.isInPalletes()) return
+                if (this.canvas.backlight_component !== null) {
+                    this.canvas.backlight_component.body.style.boxShadow = ''
+                }
+                this.canvas.backlight_component = this
+                this.body.style.boxShadow = enabled ? InnerBacklight : ''
+            }
         };
 
 
@@ -436,6 +489,7 @@
                 this.properties = properties
                 this.element = element
                 this.children = new Array()
+                this.backlight_component = null
 
                 this.root_component = this.createComponent(
                     'root',
@@ -522,9 +576,9 @@
                 }
                 this.element.ondrop = (event) => {
                     event.preventDefault()
-                    const id = event.dataTransfer.getData('plain/text')
-                    if (!this.canvas.isComponentInPalletesById(id)){
-                        this.canvas.getComponentById(id).remove()
+                    let component = this.canvas.getComponentById(event.dataTransfer.getData('plain/text'))
+                    if (!component.isInPalletes()){
+                        component.remove()
                     }
                 }
             }
