@@ -1,4 +1,4 @@
-from slinn import ApiDispatcher, AsyncRequest, Storage, HttpResponse, HttpGETRedirect, HttpJSONResponse
+from slinn import ApiDispatcher, AsyncRequest, Storage, HttpResponse, HttpGETRedirect, HttpJSONResponse, HttpRender
 from . import app
 from orm.postgres import Postgres
 from orm import get_driver_name
@@ -251,7 +251,7 @@ async def restore_token_post(request: AsyncRequest, restore_token: str):
             value=token,
             expires=None if form.get('foreign_device') else datetime.datetime.now() + datetime.timedelta(weeks=2)
         )
-        
 
-        
-    await request.respond(HttpResponse, token)
+
+dp  .static('/scripts/geety.js', HttpRender, 'scripts/geety.js', storage=views)\
+    .static('/styles/root.css', HttpRender, 'styles/root.css', storage=views)

@@ -107,6 +107,5 @@ async def ping(request: AsyncRequest):
     await request.respond(HttpResponse, 'pong')
 
 
-dp.static('/scripts/geety.js', HttpRender, 'scripts/geety.js', storage=views)
-dp.static('/styles/root.css', HttpRender, 'styles/root.css', storage=views)
-
+dp  .static('/scripts/geety.js', HttpRender, 'scripts/geety.js', storage=views)\
+    .static('/styles/root.css', HttpRender, 'styles/root.css', storage=views)

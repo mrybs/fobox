@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <Geety xmlns:G="Geety">
     <View>
-        <FoboxBase/>
+        <AuthBase/>
         <G:Page title="Регистрация | $PNAME"/>
 
         <style>

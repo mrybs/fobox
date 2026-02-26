@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <title>Demo</title>
+</head>
+<body>
+    <style>
+        :root {
+            --editor-highlight-color: cyan;
+            --editor-border: #999;
+            --editor-trash-bg: #fcc;
+            --editor-trash-fg: #966;
+            --editor-trash-border: #c99;
+        }
+        body {
+            display: flex;
+        }
+        .editor-canvas, .editor-pallete, .editor-trash, .editor-properties {
+            min-height: 100px;
+            min-width: 100px;
+            border-radius: 5px;
+            border: 1px solid var(--editor-border);
+        }
+        .editor-canvas {
+            flex-grow: 1;
+        }
+        .editor-canvas:has(>.editor-info-h2):not(:has(.editor-component)){
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .editor-canvas:has(.editor-component)>.editor-info-h2{
+            display: none;
+        }
+        .editor-pallete {
+            width: fit-content;
+        }
+        .editor-trash {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: var(--editor-trash-bg);
+            border: 1px solid var(--editor-trash-border);
+        }
+        .editor-trash>span {
+            font-size: 64px;
+            user-select: none;
+            color: var(--editor-trash-fg);
+        }
+        .editor-component-header {
+            font-size: 12px;
+            padding: 1px;
+            width: max-content;
+            background: var(--editor-highlight-color);
+        }
+        .editor-component-header>span {
+            font-size: 12px;
+            vertical-align: sub;
+            cursor: pointer;
+        }
+        .editor-pallete .editor-component {
+            margin: 5px;
+        }
+        .editor-pallete .editor-component-header>span{
+            display: none;
+        }
+        .editor-component-content {
+            border: 1px solid var(--editor-highlight-color);
+        }
+        .editor-component {
+            user-select: none;
+            cursor: grab;
+            margin: 10px;
+        }
+    </style>
+    <script>
+        const ID_PREFIX = '_EditorElement-'
+        const Sides = Object.freeze({
+            LEFT: 'LEFT',
+            TOP: 'TOP',
+            RIGHT: 'RIGHT',
+            BOTTOM: 'BOTTOM',
+            INSIDE: 'INSIDE'
+        })
+
+        function generateId () { return ID_PREFIX + Math.random().toString(36).substring(2, 15) }
+        function getComponentId (element) {
+            let parent = element
+            while (!parent.id.startsWith(ID_PREFIX) && parent !== null) {
+                parent = parent.parentNode
+            }
+            return parent !== null ? parent.id : null
+        }
+        function getContainer (canvas, element) {
+            let container = canvas.getComponentById(getComponentId(element))
+            while (!container.container) {
+                container = canvas.getComponentById(getComponentId(element.parentNode))
+            }
+            return container !== null ? container.id : null
+        }
+        function getClosestWithSide(parent, x, y) {
+            let closest = null;
+            let minDist = Infinity;
+            let side = null;
+            for (const el of parent.children) {
+                const rect = el.getBoundingClientRect();
+                const dx = Math.max(rect.left - x, 0, x - rect.right);
+                const dy = Math.max(rect.top - y, 0, y - rect.bottom);
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < minDist) {
+                    minDist = dist;
+                    closest = el;
+                    if (dx === 0 && dy === 0) {
+                        side = Sides.INSIDE;
+                    } else {
+                        let horizSide = null;
+                        if (x < rect.left) horizSide = Sides.LEFT;
+                        else if (x > rect.right) horizSide = Sides.RIGHT;
+                        let vertSide = null;
+                        if (y < rect.top) vertSide = Sides.TOP;
+                        else if (y > rect.bottom) vertSide = Sides.BOTTOM;
+                        if (horizSide && !vertSide) {
+                            side = horizSide;
+                        } else if (!horizSide && vertSide) {
+                            side = vertSide;
+                        } else if (horizSide && vertSide) {
+                            if (dx > dy) {
+                                side = horizSide;
+                            } else if (dy > dx) {
+                                side = vertSide;
+                            } else {
+                                side = horizSide;
+                            }
+                        } else {
+                            side = null;
+                        }
+                    }
+                }
+            }
+            return {
+                element: closest,
+                side: side
+            };
+        }
+
+        class Component {
+            constructor (name, innerHTML, canvas, container=false, parent=null, children=new Array(), dropClientX=null, dropClientY=null) {
+                this.name = name
+                this.container = container
+                this.parent = parent
+                this.children = children
+                this.canvas = canvas
+                this.id = generateId()
+                this.canvas.components.set(this.id, this)
+
+                this.element = document.createElement('div')
+                this.element.id = this.id
+                this.element.classList.add('editor-component')
+                this.element.setAttribute('draggable', true)
+
+                this.element.innerHTML = `
+                    <div class="editor-component-header">
+                        <span class="material-symbols-outlined">page_info</span>
+                        ${this.name}
+                    </div>
+                    <div class="editor-component-content">${innerHTML}</div>
+                `
+                this.header = this.element.getElementsByClassName('editor-component-header')[0]
+                this.body = this.element.getElementsByClassName('editor-component-content')[0]
+
+                this.element.ondragstart = event => {
+                    event.dataTransfer.setData('plain/text', event.target.id)
+                }
+                
+                if (this.parent !== null){
+                    if (dropClientX === null || dropClientY === null){
+                        this.parent.appendChild(this)
+                    }else{
+                        this.parent.insertChild(this, dropClientX, dropClientY)
+                    }
+                }
+                
+                if (this.container) {
+                    this.container_element = this.body.querySelector(this.container)
+                    this.element.ondragover = event => {
+                        event.preventDefault()
+                    }
+                    this.element.ondrop = event => {
+                        event.preventDefault()
+                        event.stopPropagation()
+                        if (this.canvas.isComponentInPalletesById(this.id)) return
+                        const id = event.dataTransfer.getData('plain/text')
+                        const component = this.canvas.getComponentById(id)
+                        const target_id = getComponentId(event.target)
+                        if (this.canvas.isComponentInPalletesById(id)){
+                            component.copy(
+                                parent=this.canvas.getComponentById(target_id),
+                                dropClientX=event.clientX,
+                                dropClientY=event.clientY
+                            )
+                        }
+                        else {
+                            try {
+                                this.canvas.getComponentById(target_id).insertChild(component, event.clientX, event.clientY)
+                            } catch (err) {
+                                if (err.name !== 'HierarchyRequestError'){
+                                    throw err
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            appendChild (component) {
+                this.container_element.appendChild(component.element)
+                this.children.push(component)
+                if (component.parent !== null) {
+                    component.parent.children.splice(component.parent.children.indexOf(component))
+                }
+                component.parent = this
+            }
+
+            insertChild(component, clientX, clientY) {
+                if (!this.container) {
+                    throw new Error('Компонент не является контейнером')
+                    let container = getContainer(this.canvas, this.element)
+                    console.log(container.element)
+                    container.insertChild(component, clientX, clientY)
+                }
+                const closest = getClosestWithSide(this.container_element, clientX, clientY);
+                if (closest.element && closest.side !== Sides.INSIDE) {
+                    switch (closest.side){
+                        case Sides.LEFT:
+                        case Sides.TOP:
+                            this.container_element.insertBefore(component.element, closest.element)
+                            break
+                        case Sides.RIGHT:
+                        case Sides.BOTTOM:
+                            closest.element.after(component.element)
+                            break
+                    }
+                } else {
+                    this.container_element.appendChild(component.element);
+                }
+                if (component.parent && component.parent !== this) {
+                    component.parent.children = component.parent.children.filter(c => c !== component);
+                }
+                if (!this.children.includes(component)) {
+                    this.children.push(component);
+                }
+                component.parent = this;
+            }
+
+            copy(parent = null) {
+                const newComponent = new Component(
+                    this.name,
+                    this.body.innerHTML,
+                    this.canvas,
+                    this.container,
+                    null
+                );
+                if (newComponent.container){
+                    newComponent.container_element.replaceChildren()
+                    this.children.forEach(child => {
+                        const childCopy = child.copy(newComponent);
+                        newComponent.appendChild(childCopy);
+                    });
+                }
+                if (parent) {
+                    parent.appendChild(newComponent);
+                }
+                return newComponent;
+            }
+            remove () {
+                this.element.remove()
+                if (this.parent) {
+                    this.parent.children.splice(this.parent.children.indexOf(this));
+                }
+                this.canvas.components.delete(this.id)
+            }
+        };
+        class Canvas {
+            constructor (element, palletes) {
+                this.components = new Map()
+                this.palletes = palletes
+                this.element = element
+                this.children = new Array()
+
+                this.element.ondragover = event => {
+                    event.preventDefault();
+                }
+                this.element.ondrop = event => {
+                    event.preventDefault()
+                    const id = event.dataTransfer.getData('plain/text')
+                    const component = this.getComponentById(id)
+                    if (this.isComponentInPalletesById(id)){
+                        this.appendChild(component.copy())
+                    }
+                    else {
+                        this.appendChild(component)
+                    }
+                }
+            }
+            createComponent (name, innerHTML, container=false, parent=null) {
+                return new Component(name, innerHTML, this, container, parent)
+            }
+            getComponentById (id) {
+                return this.components.get(id)
+            }
+            isComponentInPalletesById (id) {
+                return this.palletes.map(pallete => { return pallete.component_ids }).flat().includes(id)
+            }
+            appendChild (component) {
+                this.element.appendChild(component.element)
+                component.parent = null
+            }
+        };
+        class Pallete {
+            constructor (element) {
+                this.element = element
+                this.component_ids = []
+            }
+            addComponent (component) {
+                this.component_ids.push(component.element.id)
+                this.element.appendChild(component.element)
+            }
+            addComponents (components) {
+                components.forEach(component => 
+                    this.addComponent(component)
+                )
+            }
+        }
+        class Trash {
+            constructor (element, canvas) {
+                this.element = element
+                this.canvas = canvas
+
+                this.element.ondragover = (event) => {
+                    event.preventDefault();
+                }
+                this.element.ondrop = (event) => {
+                    event.preventDefault()
+                    const id = event.dataTransfer.getData('plain/text')
+                    if (!this.canvas.isComponentInPalletesById(id)){
+                        this.canvas.getComponentById(id).remove()
+                    }
+                }
+            }
+        }
+    </script>
+    <div>
+        <div id="pallete" class="editor-pallete"></div>
+        <div id="trash" class="editor-trash">
+            <span class="material-symbols-outlined">delete_forever</span>
+        </div>
+    </div>
+    <div id="canvas" class="editor-canvas">
+        <h2 class="editor-info-h2">Переместите первый элемент из палитры</h2>
+    </div>
+    <div id="properties" class="editor-properties"></div>
+    <style>
+        .container{
+            min-width: 40px;
+            min-height: 40px;
+            background: #2242;
+            border: 1px solid #668;
+            padding: 5px;
+            margin: 5px;
+        }
+    </style>
+    <script>
+        let pallete = new Pallete(document.getElementById('pallete'))
+        let canvas = new Canvas(document.getElementById('canvas'), [pallete])
+        let trash = new Trash(document.getElementById('trash'), canvas)
+        pallete.addComponents([
+            canvas.createComponent('Текст', `<span contenteditable>Текст</span>`),
+            canvas.createComponent('Поле ввода', `<input/>`),
+            canvas.createComponent('Контейнер', `<div class="container"></div>`, container='.container')
+        ])
+    </script>
+</body>
+</html>
