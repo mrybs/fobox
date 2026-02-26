@@ -12,15 +12,19 @@
         :root {
             --editor-highlight: cyan;
             --editor-highlight-properties-opened: magenta;
-            --editor-border: #999;
+            --editor-border: #99a;
             --editor-trash-bg: #fcc;
             --editor-trash-fg: #966;
             --editor-trash-border: #c99;
+            --editor-context-menu-bg: #d0d0d7;
+            --editor-fg: #000;
+            --editor-danger-fg: #e22;
         }
         body {
             display: flex;
             font-weight: 400;
             font-family: 'Ubuntu';
+            color: var(--editor-fg);
         }
         .editor-canvas, .editor-pallete, .editor-trash, .editor-properties {
             min-height: 100px;
@@ -121,6 +125,21 @@
         .editor-property-label::after {
             content: ':'
         }
+        #editor-context-menu {
+            position: absolute;
+            display: none;
+            cursor: pointer;
+            user-select: none;
+            border-radius: 10px;
+            background: var(--editor-context-menu-bg);
+        }
+        #editor-context-menu>div{
+            margin: 5px;
+        }
+        .editor-context-menu-icon{
+            font-size: 16px;
+            vertical-align: sub;
+        }
     </style>
     <script>
         const ID_PREFIX = '_EditorElement-'
@@ -156,7 +175,7 @@
             return container !== null ? container.id : null
         }
         
-        function getClosestWithSide(parent, x, y) {
+        function getClosestWithSide (parent, x, y) {
             let closest = null;
             let minDist = Infinity;
             let side = null;
@@ -200,6 +219,39 @@
                 side: side
             };
         }
+        
+        function showContextMenu (clientX, clientY, elements) {
+            if (!document.hasOwnProperty('contextMenu')){
+                document.contextMenu = document.createElement('div')
+                document.contextMenu.id = 'editor-context-menu'
+                document.querySelector('body').appendChild(document.contextMenu)
+                window.onclick = event => {
+                    hideContextMenu()
+                }
+            }
+            document.contextMenu.replaceChildren()
+            elements.forEach(element => {
+                let element_element = document.createElement('div')
+                element_element.innerHTML = `
+                    <span class="material-symbols-outlined editor-context-menu-icon">${element.icon}</span>
+                    <span>${element.label}</span>
+                `
+                console.log(element, element.color)
+                element_element.style.color = element.color
+                element_element.onclick = event => {
+                    element.onclick(event)
+                    hideContextMenu()
+                }
+                document.contextMenu.appendChild(element_element)
+            })
+            document.contextMenu.style.left = clientX + 'px'
+            document.contextMenu.style.top = clientY + 'px'
+            document.contextMenu.style.display = 'block'
+        }
+
+        function hideContextMenu () {
+            document.contextMenu.style.display = 'none'
+        }
 
 
         class Component {
@@ -228,6 +280,28 @@
                 this.header = this.element.getElementsByClassName('editor-component-header')[0]
                 this.propertiesButton = this.header.getElementsByClassName('editor-component-properties-button')[0]
                 this.body = this.element.getElementsByClassName('editor-component-content')[0]
+                
+                this.context_menu_items = new Array()
+                this.context_menu_items.push({ label: 'Открыть свойства', icon: 'page_info', color: 'var(--editor-fg)', onclick: ev => {
+                    this.canvas.properties.display(this)
+                }})
+                if (this.canvas.root_component !== undefined){
+                    this.context_menu_items.push({ label: 'Удалить', icon: 'delete', color: 'var(--editor-danger-fg)', onclick: ev => {
+                        this.remove()
+                    }})
+                    this.context_menu_items.push({ label: 'Дублировать', icon: 'content_copy', color: 'var(--fg)', onclick: ev => {
+                        this.insertAfter(this.copy())
+                    }})
+                    if (this.container) {
+                        this.context_menu_items.push({ label: 'Дублировать без содержимого', icon: 'copy_all', color: 'var(--fg)', onclick: ev => {
+                            this.canvas.properties.display(this)
+                            let copy = this.copy()
+                            copy.children = new Array()
+                            copy.container_element.replaceChildren()
+                            this.insertAfter(copy)
+                        }})
+                    }
+                }
 
                 this.element.ondragstart = event => {
                     event.dataTransfer.setData('plain/text', event.target.id)
@@ -235,7 +309,16 @@
 
                 this.body.onclick = this.header.onclick = event => {
                     event.stopPropagation()
+                    hideContextMenu()
                     this.canvas.properties.display(this)
+                }
+
+                this.body.oncontextmenu = event => {
+                    event.stopPropagation()
+                    event.preventDefault()
+                    if (!this.canvas.isComponentInPalletesById(this.id)) {
+                        showContextMenu(event.clientX, event.clientY, this.context_menu_items)
+                    }
                 }
                 
                 if (this.container) {
@@ -271,6 +354,17 @@
                     component.parent.children.splice(component.parent.children.indexOf(component))
                 }
                 component.parent = this
+            }
+
+            insertAfter (component) {
+                this.element.after(component.element)
+                if (component.parent && component.parent !== this.parent) {
+                    component.parent.children = component.parent.children.filter(c => c !== component);
+                }
+                if (!this.parent.children.includes(component)) {
+                    this.parent.children.push(component);
+                }
+                component.parent = this.parent;
             }
 
             insertChild(component, clientX, clientY) {
