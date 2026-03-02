@@ -1,0 +1,50 @@
+.editor-component-content {
+    border-top-right-radius: 5px;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    border: 1px solid var(--editor-highlight);
+    transition: box-shadow .2s ease;
+}
+.editor-component[properties-opened]>.editor-component-content{
+    border: 1px solid var(--editor-highlight-properties-opened);
+}
+.editor-component {
+    user-select: none;
+    cursor: grab;
+    margin: 10px;
+    width: fit-content;
+    height: fit-content;
+}
+.editor-component:has(.editor-root-component),
+.editor-component-content:has(.editor-root-component),
+.editor-root-component{
+    min-width: stretch;
+    min-width: -moz-available;
+    min-width: -webkit-fill-available;
+    height: calc(100% - 9px);
+    cursor: initial;
+}
+.editor-component:has(.editor-root-component){
+    margin: 0;
+}
+.editor-component-header {
+    font-size: 12px;
+    padding: 1px;
+    margin-right: 3px;
+    width: max-content;
+    background: var(--editor-highlight);
+}
+.editor-component[properties-opened]>.editor-component-header{
+    background: var(--editor-highlight-properties-opened);
+}
+.editor-component-properties-button {
+    font-size: 12px;
+    vertical-align: sub;
+    cursor: pointer;
+}
+.editor-pallete .editor-component {
+    margin: 5px;
+}
+.editor-pallete .editor-component-properties-button{
+    display: none;
+}

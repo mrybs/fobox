@@ -4,15 +4,17 @@ from collections.abc import Generator
 from itertools import chain
 from urllib.parse import quote
 from . import exceptions
-from .utils import list_strip, merge_dicts, get_nested_value
+from .property import Property
+from .utils import list_strip, merge_dicts, get_nested_value, uid_generator
 import html
 import re
 import orm
-import datetime
+import json
+import datetime  # required by eval
 
 
 VAR_PATTERN = re.compile(r'\$([\w\.]+)(@html|@url)?')
-INSTRUCTION_PATTERN = re.compile(r'^\{(Geety|DB@[0-9]+)\}[\w\.]+$')
+INSTRUCTION_PATTERN = re.compile(r'^(\{(Geety|DB@[0-9]+|Fobox)\}[\w\.]+|style|link|base)$')
 DB_QUERY_PATTERN = re.compile(r'^\{DB@[0-9]+\}Query$')
 DB_OP_PATTERN = re.compile(r'^\{DB@([0-9]+)\}([\w\.]+)$')
 
@@ -81,12 +83,17 @@ class Component:
             args: dict | None = None,
             children: list[Component] | None = None,
             parent: Component | None = None,
+            properties: list[Property] | None = None,
+            uid: str | None = None,
             _is_def: bool = False):
         self.tag = tag
         self.args = args or {}
         self.children = list_strip(children or [])
         self.parent = parent
+        self.properties = properties or []
         self._is_def = _is_def
+        self.uid = uid or uid_generator()
+            
     
     def copy(self) -> Component:
         return Component(
@@ -97,6 +104,11 @@ class Component:
                 for child in self.children
             ],
             parent=self.parent,
+            properties=[
+                prop.copy()
+                for prop in self.properties
+            ],
+            uid=self.uid,
             _is_def=self._is_def
         )
     
@@ -110,6 +122,8 @@ class Component:
         prevs = prevs or []
         component = page.components.get(self.tag, self).copy()
         tag = component.args.get('{Geety}Extends', 'div') if self.tag in page.components else self.tag
+        component.args.pop('{Geety}Extends', None)
+        self.args.pop('{Geety}Extends', None)
         sargs = await var_pattern_apply_args(self.args, context, page, prevs+[self])
         cargs = await var_pattern_apply_args(component.args, context, page, prevs+[self])
 
@@ -266,17 +280,42 @@ class Component:
                                     ]
                                 )
             case '{Geety}Arg': ...  # skip
+            case '{Fobox}Properties':
+                for prop in self.find_all_by_tag('{Fobox}Property'):
+                    onload = prop.find_by_tag('{Fobox}PropertyOnLoad')
+                    onchange = prop.find_by_tag('{Fobox}PropertyOnChange')
+                    args = prop.find_by_tag('{Fobox}PropertyArgs')
+                    pargs = {}
+                    for arg in args.find_all_by_tag('{Fobox}PropertyArg') if args else ():
+                        match arg.args.get('type'):
+                            case 'value':
+                                pargs[arg.args.get('name')] = await arg.render(page, context, prevs+[self, prop, args])
+                            case 'map':
+                                _map = {}
+                                for value in arg.find_all_by_tag('{Fobox}PropertyValue'):
+                                    _map[value.args.get('key')] = await value.render(page, context, prevs+[self, prop, args, arg])
+                                pargs[arg.args.get('name')] = _map
+                    prev = find_prev(prevs)
+                    prev.properties.append(Property(
+                        prop.args.get('type'), 
+                        prop.args.get('key'),
+                        prop.args.get('name'),
+                        (await onload.render(page, context, prevs+[self, prop])).strip() if onload else None,
+                        (await onchange.render(page, context, prevs+[self, prop])).strip() if onchange else None,
+                        pargs
+                    ))
+                    page.add_script('try{'+f'({prev.properties[-1].onchange})(G.$(".{prevs[-2].uid}"), "{json.loads(prev.args.get('{Fobox}Properties', '{}')).get(prev.properties[-1].key, '')}")'+'}catch(e){console.warn("%cFailed to load Fobox Property\\n","font-size:x-large",e)}')
+            case '{Fobox}PropertyOnLoad' | '{Fobox}PropertyOnChange' | '{Fobox}PropertyArg' | '{Fobox}PropertyValue':
+                for child in self:
+                    if type(child) is str:
+                        html += await var_pattern_apply_content(child, context, page, prevs+[self])
+                    else:
+                        html += await child.render(page, context, prevs+[self])
+            case '{Fobox}Name': ...  # skip
             case _:
-                signature = eval_args(await var_pattern_apply_args({
-                    arg.args['name']: arg.args.get('def')
-                    for arg in component.find_all_by_tag('{Geety}Arg')
-                }, context, page, prevs+[self]))
-                if component.is_def():
-                    merge_dicts(signature, eval_args(await var_pattern_apply_args(self.args, context, page, prevs+[self])))
-                    merge_dicts(context, signature)
-                component.args = eval_args(await var_pattern_apply_args(component.args, context, page, prevs+[self]))
-                context.update(component.args)
-                html += f'<{tag} {' '.join([f"{key}=\"{val}\"" for key, val in component.args.items()])}>' if not self.is_def() else ''
+                if self.tag in page.components and not self.is_def():
+                    cargs['class'] = cargs.get('class', '') + ' ' + self.uid
+                html += f'<{tag} {' '.join([f"{key}=\"{val}\"" for key, val in cargs.items()])}>' if not self.is_def() else ''
                 if self.tag not in page.components or self.is_def():
                     for child in self:
                         if type(child) is str:
@@ -284,9 +323,18 @@ class Component:
                         else:
                             html += await child.render(page, context, prevs+[self])
                 elif self.tag in page.components and not self.is_def():
+                    signature = eval_args(await var_pattern_apply_args({
+                        arg.args['name']: arg.args.get('def')
+                        for arg in component.find_all_by_tag('{Geety}Arg')
+                    }, context, page, prevs+[self]))
+                    if component.is_def():
+                        merge_dicts(signature, eval_args(await var_pattern_apply_args(self.args, context, page, prevs+[self])))
+                        merge_dicts(context, signature)
+                    component.args = await var_pattern_apply_args(component.args, context, page, prevs+[self])
+                    context.update(component.args)
                     html += await page.components[self.tag].copy().render(page, context, prevs+[RenderedComponent.from_component(
                         ''.join([
-                                await var_pattern_apply_content(subchild, context, page, prevs+[self]) if type(subchild) is str else await subchild.render(page, context, prevs)
+                                await var_pattern_apply_content(subchild, context, page, prevs+[self]) if type(subchild) is str else await subchild.render(page, context, prevs+[self])
                                 for subchild in self
                         ]), self
                     )])
@@ -322,7 +370,7 @@ class Component:
         return self._is_def
                     
     def __repr__(self) -> str:
-        return f'<Component {'definition' if self.is_def() else ''} {self.tag} [{", ".join([f"{key}={val}" for key, val in self.args.items()])}] with {len(self.children)} children>'
+        return f'<Component {self.uid} {'definition ' if self.is_def() else ''}{self.tag} [{", ".join([f"{key}={val}" for key, val in self.args.items()])}] with {len(self.children)} children>'
 
     def __iter__(self) -> Generator[Component]:
         yield from self.children
@@ -337,6 +385,7 @@ class RenderedComponent(Component):
             args: dict | None = None,
             children: list[Component] | None = None,
             parent: Component | None = None,
+            uid: str | None = None,
             _is_def: bool = False):
         Component.__init__(
             self,
@@ -344,6 +393,7 @@ class RenderedComponent(Component):
             args=args,
             children=children,
             parent=parent,
+            uid=uid,
             _is_def=_is_def
         )
         self.html = html
@@ -357,6 +407,7 @@ class RenderedComponent(Component):
                 for child in self.children
             ],
             parent=self.parent,
+            uid=self.uid,
             _is_def=self._is_def
         )
 
@@ -372,5 +423,6 @@ class RenderedComponent(Component):
             args=component.args,
             children=component.children,
             parent=component.parent,
+            uid=component.uid,
             _is_def=component._is_def
         )

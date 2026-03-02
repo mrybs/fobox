@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<Geety xmlns:G="Geety">
+    <ErrorBox class="'errorbox'">
+        <script>
+            function hide_errorbox(event){
+                event.srcElement.parentElement.style.transform='translateY(-1000px)';
+                const urlObj = new URL(window.location.href);
+                urlObj.searchParams.delete('message');
+                window.history.replaceState(null, '', urlObj.toString());
+            }
+        </script>
+
+        <style>
+            .errorbox{
+                background: var(--error-background);
+                color: var(--error-text);
+                border: 1px solid var(--error-text);
+                padding: 10px;
+                z-index: 0;
+                margin: 15px;
+                border-radius: 20px;
+                max-width: 768px;
+                width: stretch;
+                width: -moz-available;
+                width: -webkit-fill-available;
+                position: absolute;
+                top: 0;
+                transition: transform ease 1s;
+            }
+            .errorbox>.material-symbols-outlined{
+                cursor: pointer;
+            }
+        </style>
+        
+        <span class="'material-symbols-outlined'" onclick="'hide_errorbox(event)'">close_small</span>
+        <G:Content/>
+    </ErrorBox>
+</Geety>

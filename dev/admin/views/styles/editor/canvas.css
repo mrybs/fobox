@@ -1,0 +1,12 @@
+.editor-canvas {
+    flex-grow: 1;
+}
+.editor-canvas .editor-root-component:has(>.editor-info-h2):not(:has(.editor-component)){
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    align-content: center !important;
+}
+.editor-canvas .editor-root-component:has(.editor-component)>.editor-info-h2{
+    display: none;
+}

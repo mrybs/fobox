@@ -1,0 +1,12 @@
+:root {
+    --editor-highlight: cyan;
+    --editor-backlight: red;
+    --editor-highlight-properties-opened: magenta;
+    --editor-border: #99a;
+    --editor-trash-bg: #fcc;
+    --editor-trash-fg: #966;
+    --editor-trash-border: #c99;
+    --editor-context-menu-bg: #d0d0d7af;
+    --editor-fg: #000;
+    --editor-danger-fg: #e22;
+}

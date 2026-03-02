@@ -1,0 +1,18 @@
+#editor-context-menu {
+    position: fixed;
+    display: none;
+    cursor: pointer;
+    user-select: none;
+    border-radius: 10px;
+    background: var(--editor-context-menu-bg);
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px); 
+    font-size: 14px;
+}
+#editor-context-menu>div{
+    margin: 7px;
+}
+.editor-context-menu-icon{
+    font-size: 16px;
+    vertical-align: sub;
+}

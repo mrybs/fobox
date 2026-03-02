@@ -1,15 +1,19 @@
 from slinn import ApiDispatcher, AsyncRequest, HttpResponse, Storage, AnyFilter
 from orm.postgres import Postgres
 from orm import get_driver_name
+from slinn_api import SlinnAPI
 from . import app
 import geety as G
 import re
+import json
 
 
 dp = ApiDispatcher()
-gapp = G.App()
+gapp = G.App(context={
+    'PNAME': SlinnAPI.get_config()['name']
+})
 
-for db in app.config['dbs']:
+for db in SlinnAPI.get_config()['dbs']:
     match get_driver_name(db['dsn']):
         case 'postgres':
             gapp.add_database_pool(Postgres(
@@ -18,15 +22,23 @@ for db in app.config['dbs']:
             ))
 
 views = Storage(app.path + '/views')
-components = Storage(app.path + '/components')
-for component_file in components.listdir('.'):
-    if components.isfile(component_file):
-        with components(component_file, 'r') as component:
-            gapp.load(component)
+palletes = Storage(app.path + '/../Palletes')
+
+def reload_components():
+    gapp.components = {}
+    palletes_json = {}
+    with palletes('palletes.json', 'r') as palletes_json_f:
+        palletes_json = json.loads(palletes_json_f.read())
+    for pallete in palletes_json['palletes']:
+        if palletes.isdir(pallete['path']):
+            for components_fn in palletes.listdir(pallete['path']):
+                with palletes(pallete['path'] + '/' + components_fn, 'r') as components:
+                    gapp.load(components)
 
 # Write your code down here
 @dp(AnyFilter)
 async def index(request: AsyncRequest):
+    reload_components()
     request.link = request.link.removeprefix('/') or 'index'
 
     if re.search(r'\.\.', request.link):

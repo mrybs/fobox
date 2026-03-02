@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<Geety xmlns:G="Geety">
+    <LICard class="'licard'" onclick="'$onclick'">
+        <G:Arg name="onclick" def="''"/>
+
+        <style>
+            .licard{
+                border-radius: 10px;
+                padding: 10px;
+                margin: 5px;
+                background: var(--button-background);
+                cursor: pointer;
+                text-align: left;
+                user-select: none;
+            }
+        </style>
+
+        <G:Content/>
+    </LICard>
+</Geety>

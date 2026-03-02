@@ -1,0 +1,22 @@
+.editor-properties {
+    min-width: 350px;
+}
+.editor-properties>h2 {
+    text-align: center;
+    margin-bottom: 10px;
+}
+.editor-property {
+    padding: 2px 5px;
+    border-bottom: 1px solid var(--editor-border);
+}
+.editor-property:last-of-type {
+    border-bottom: none;
+}
+.editor-property-label {
+    display: inline-block;
+    padding-right: 5px;
+    min-width: 120px;
+}
+.editor-property-label::after {
+    content: ':'
+}

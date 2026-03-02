@@ -1,0 +1,55 @@
+<?xml version="1.0"?>
+<Geety xmlns:G="Geety">
+    <Header id="header">
+        <style>
+            #header {
+                padding: 8px 14px 8px 28px;
+                border-bottom: 1px solid var(--border);
+                background: var(--header-background);
+                position: sticky;
+                width: 100vw;
+                top: 0;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                backdrop-filter: blur(4px);
+                -webkit-backdrop-filter: blur(4px);
+                height: 45px;
+                z-index: 1;
+            }
+            #header>* {
+                margin: 0;
+                font-size: 24px;
+                font-weight: 900;
+            }
+            #header-menu:has(*) {
+                border-left: 1px solid black;
+            }
+            #header-menu>span {
+                margin: 0 0 0 14px;
+            }
+            #header-menu {
+                margin: 0 14px;
+                font-size: 16px;
+                user-select: none;
+                cursor: pointer;
+                text-decoration: underline;
+                display: flex;
+                flex-grow: 1;
+            }
+        </style>
+
+        <script>
+            function addButtonToHeader (label, callback) {
+                let btn = document.createElement('span')
+                btn.innerText = label
+                btn.onclick = callback
+                document.getElementById('header-menu').appendChild(btn)
+            }
+        </script>
+
+        <h1 onclick="G.redirect(`/fobox`)">fobox</h1>
+        <div id="header-menu"></div>
+        <span><span class="material-symbols-outlined">person</span>$USER.name</span>
+    </Header>
+</Geety>

@@ -1,3 +1,7 @@
+import random
+import string
+
+
 def get_nested_value(obj, key_path):
     current = obj
     parts = key_path.split('.')
@@ -43,3 +47,6 @@ def merge_dicts(sec, pri):
         if value is None and key in sec:
             continue
         sec[key] = value
+
+def uid_generator():
+    return '_GeetyUID-' + ''.join(random.choices(string.ascii_letters + string.digits, k=8))

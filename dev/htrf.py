@@ -1,5 +1,6 @@
 from slinn import FTDispatcher, HttpResponse
 import _io # type: ignore
+import json
 
 
 htrf = FTDispatcher()
@@ -19,3 +20,7 @@ def js(file: _io.BufferedReader) -> HttpResponse:
 @htrf.by_extension('png')
 def png(file: _io.BufferedReader) -> HttpResponse:
     return HttpResponse(file.read().decode(), content_type='image/png')
+
+@htrf.by_extension('json')
+def json_handler(file: _io.BufferedReader) -> HttpResponse:
+    return HttpResponse(json.dumps(json.load(file), ensure_ascii=False), content_type='application/json')

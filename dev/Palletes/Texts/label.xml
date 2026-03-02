@@ -1,0 +1,63 @@
+<?xml version="1.0"?>
+<Geety xmlns:G="Geety" xmlns:F="Fobox">
+    <Label G:Extends="span">
+        <F:Name>Подпись</F:Name>
+        <F:Properties>
+            <F:Property type="TEXT" key="content" name="Содержимое">
+                <F:PropertyOnLoad>
+                    <![CDATA[ 
+                        (element) => {
+                            return element.innerText
+                        }
+                    ]]>
+                </F:PropertyOnLoad>
+                <F:PropertyOnChange>
+                    <![CDATA[ 
+                        (element, value) => {
+                            element.innerText = value
+                        }
+                    ]]>
+                </F:PropertyOnChange>
+            </F:Property>
+            <F:Property type="COLOR" key="color" name="Цвет текста">
+                <F:PropertyOnLoad>
+                    <![CDATA[ 
+                        (element) => {
+                            return G.rgbToHex(window.getComputedStyle(element).color)
+                        }
+                    ]]>
+                </F:PropertyOnLoad>
+                <F:PropertyOnChange>
+                    <![CDATA[ 
+                        (element, value) => {
+                            element.style.color = value
+                        }
+                    ]]>
+                </F:PropertyOnChange>
+            </F:Property>
+            <F:Property type="NUMBER" key="fontSize" name="Размер шрифта">
+                <F:PropertyOnLoad>
+                    <![CDATA[ 
+                        (element) => {
+                            return window.getComputedStyle(element).getPropertyValue('font-size').slice(0, -2)
+                        }
+                    ]]>
+                </F:PropertyOnLoad>
+                <F:PropertyOnChange>
+                    <![CDATA[ 
+                        (element, value) => {
+                            element.style.fontSize = value + 'px'
+                        }
+                    ]]>
+                </F:PropertyOnChange>
+                <F:PropertyArgs>
+                    <F:PropertyArg type="value" name="min">4</F:PropertyArg>
+                    <F:PropertyArg type="value" name="max">72</F:PropertyArg>
+                    <F:PropertyArg type="value" name="step">1</F:PropertyArg>
+                </F:PropertyArgs>
+            </F:Property>
+        </F:Properties>
+
+        Lorem ipsum
+    </Label>
+</Geety>

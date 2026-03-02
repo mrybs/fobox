@@ -1,0 +1,45 @@
+<?xml version="1.0"?>
+<Geety xmlns:G="Geety" xmlns:F="Fobox">
+    <FlexBox class="container">
+        <F:Name>Flex-контейнер</F:Name>
+        <F:Properties>
+            <F:Property type="VARIANTS" key="direction" name="Направление">
+                <F:PropertyOnLoad>
+                    <![CDATA[ 
+                        (element) => {
+                            return (element.style.flexDirection == 'column') ? 'column' : 'row'
+                        }
+                    ]]>
+                </F:PropertyOnLoad>
+                <F:PropertyOnChange>
+                    <![CDATA[ 
+                        (element, value) => {
+                            element.style.flexDirection = (value == 'row' ? 'row' : 'column')
+                        }
+                    ]]>
+                </F:PropertyOnChange>
+                <F:PropertyArgs>
+                    <F:PropertyArg type="map" name="options">
+                        <F:PropertyValue key="row">по горизонтали</F:PropertyValue>
+                        <F:PropertyValue key="column">по вертикали</F:PropertyValue>
+                    </F:PropertyArg>
+                </F:PropertyArgs>
+            </F:Property>
+        </F:Properties>
+
+        <style>
+            .container{
+                min-width: 40px;
+                min-height: 40px;
+                padding: 5px;
+                margin: 5px;
+                display: flex;
+                flex-direction: row;
+                flex-wrap: wrap;
+                align-content: flex-start;
+            }
+        </style>
+
+        <G:Content/>
+    </FlexBox>
+</Geety>

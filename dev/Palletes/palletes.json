@@ -1,0 +1,16 @@
+{
+    "palletes": [
+        {
+            "name": "Контейнеры",
+            "path": "Containers"
+        },
+        {
+            "name": "Текст",
+            "path": "Texts"
+        },
+        {
+            "name": "Компоненты ввода",
+            "path": "Inputs"
+        }
+    ]
+}

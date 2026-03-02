@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+<Geety xmlns:G="Geety">
+    <View>
+        <FlexBox>
+            <div class="container _EditorElementPath-Id-p5xrcl1izgq"></div>
+            <Label>
+                <span g:extends="span">\n\n\n\nLorem ipsum\n</span>
+            </Label>
+            <TextBox>
+                <input g:extends="input">
+            </TextBox>
+        </FlexBox>
+    </View>
+</Geety>
+
+<?xml version="1.0"?>
+<Geety xmlns:G="Geety">
+    <View>
+        <FlexBox>
+            <div xmlns="http://www.w3.org/1999/xhtml" class="container _EditorElementPath-Id-ulo0bnw6r6"></div>
+            <Label>
+                <span xmlns="http://www.w3.org/1999/xhtml" g:extends="span">\n\n\n\nLorem ipsum\n</span>
+            </Label>
+            <TextBox>
+                <input xmlns="http://www.w3.org/1999/xhtml" g:extends="input" />
+            </TextBox>
+        </FlexBox>
+    </View>
+</Geety>
+
+<?xml version="1.0"?>
+<Geety xmlns:G="Geety">
+    <View>
+        <FlexBox>
+            <TextBox>
+
+            </TextBox>
+            <Label>
+
+            </Label>
+        </FlexBox>
+    </View>
+</Geety>

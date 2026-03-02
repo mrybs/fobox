@@ -1,0 +1,12 @@
+.editor-trash {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: var(--editor-trash-bg);
+    border: 1px solid var(--editor-trash-border);
+}
+.editor-trash>span {
+    font-size: 64px;
+    user-select: none;
+    color: var(--editor-trash-fg);
+}

@@ -188,40 +188,40 @@
         }
         
         function getClosestWithSide (parent, x, y) {
-            let closest = null;
-            let minDist = Infinity;
-            let side = null;
+            let closest = null
+            let minDist = Infinity
+            let side = null
             for (const el of parent.children) {
-                const rect = el.getBoundingClientRect();
-                const dx = Math.max(rect.left - x, 0, x - rect.right);
-                const dy = Math.max(rect.top - y, 0, y - rect.bottom);
-                const dist = Math.sqrt(dx * dx + dy * dy);
+                const rect = el.getBoundingClientRect()
+                const dx = Math.max(rect.left - x, 0, x - rect.right)
+                const dy = Math.max(rect.top - y, 0, y - rect.bottom)
+                const dist = Math.sqrt(dx * dx + dy * dy)
                 if (dist < minDist) {
-                    minDist = dist;
-                    closest = el;
+                    minDist = dist
+                    closest = el
                     if (dx === 0 && dy === 0) {
-                        side = Sides.INSIDE;
+                        side = Sides.INSIDE
                     } else {
-                        let horizSide = null;
-                        if (x < rect.left) horizSide = Sides.LEFT;
-                        else if (x > rect.right) horizSide = Sides.RIGHT;
-                        let vertSide = null;
-                        if (y < rect.top) vertSide = Sides.TOP;
-                        else if (y > rect.bottom) vertSide = Sides.BOTTOM;
+                        let horizSide = null
+                        if (x < rect.left) horizSide = Sides.LEFT
+                        else if (x > rect.right) horizSide = Sides.RIGHT
+                        let vertSide = null
+                        if (y < rect.top) vertSide = Sides.TOP
+                        else if (y > rect.bottom) vertSide = Sides.BOTTOM
                         if (horizSide && !vertSide) {
-                            side = horizSide;
+                            side = horizSide
                         } else if (!horizSide && vertSide) {
-                            side = vertSide;
+                            side = vertSide
                         } else if (horizSide && vertSide) {
                             if (dx > dy) {
-                                side = horizSide;
+                                side = horizSide
                             } else if (dy > dx) {
-                                side = vertSide;
+                                side = vertSide
                             } else {
-                                side = horizSide;
+                                side = horizSide
                             }
                         } else {
-                            side = null;
+                            side = null
                         }
                     }
                 }
@@ -229,7 +229,7 @@
             return {
                 element: closest,
                 side: side
-            };
+            }
         }
         
         function showContextMenu (clientX, clientY, elements) {
@@ -470,7 +470,7 @@
                 this.canvas.backlight_component = this
                 this.body.style.boxShadow = side === null ? '' : OuterBacklight[side]
             }
-
+            
             setInnerBacklight (enabled=true) {
                 if (this.isInPalletes()) return
                 if (this.canvas.backlight_component !== null) {
@@ -479,7 +479,7 @@
                 this.canvas.backlight_component = this
                 this.body.style.boxShadow = enabled ? InnerBacklight : ''
             }
-        };
+        }
 
 
         class Canvas {
@@ -544,7 +544,7 @@
                 }
                 component.parent = this;
             }
-        };
+        }
 
 
         class Pallete {

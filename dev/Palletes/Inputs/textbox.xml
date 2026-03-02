@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<Geety xmlns:G="Geety" xmlns:F="Fobox">
+    <TextBox G:Extends="input">
+        <F:Name>Поле ввода</F:Name>
+    </TextBox>
+</Geety>

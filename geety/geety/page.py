@@ -4,6 +4,7 @@ from .component import Component
 from .mime_types import MIME_TYPES
 import orm
 import html
+from . import get_geety_js
 
 
 class Page:
@@ -12,6 +13,7 @@ class Page:
         self.db_pools = db_pools
         self.entry_point = None
         self.styles = []
+        self.scripts = []
         self.locale = 'ru_RU'
         self.title = 'Geety Page'
         self.favicon = None
@@ -38,6 +40,9 @@ class Page:
     
     def add_style(self, style: str) -> None:
         self.styles.append(style)
+    
+    def add_script(self, script: str) -> None:
+        self.scripts.append(script)
     
     def add_link(self, link_args: dict) -> None:
         self.links.append(link_args)
@@ -140,7 +145,7 @@ class Page:
             self.add_meta(name='robots', content=self.robots)
 
         meta = ''.join(['<meta ' + ' '.join([
-            f'{key}="{html.escape(val)}" '
+            f'{key}="{html.escape(val)}"'
             for key, val in meta.items()
         ]) + '>' for meta in self.meta])
 
@@ -157,10 +162,12 @@ class Page:
                     f'{base}'
                     f'{links}'
                     f'<title>{self.title}</title>'
-                    f'<style>{''.join(self.styles)}</style>'
+                    f'<style>{''.join(''.join(self.styles).split('\n'))}</style>'
+                    f'<script>{get_geety_js.GEETY_JS}</script>'
                 '</head>'
                 '<body>'
                     f'{body}'
+                    f'<script>{'\n'.join(self.scripts)}</script>'
                 '</body>'
             '</html>'
         )
