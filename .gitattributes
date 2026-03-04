@@ -1,4 +1,6 @@
 # Auto detect text files and perform LF normalization
 * text=auto
 *.view.xml linguist-language=Geety
+*.view.xml linguist-detectable=true
 **/Components/*.xml linguist-language=Geety
+**/Components/*.xml linguist-detectable=true
