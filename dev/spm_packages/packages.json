@@ -95,6 +95,31 @@
             ]
         }
     },
-    "templates": {},
+    "templates": {
+        "fobox-app": {
+            "displayName": "Fobox app",
+            "description": "Fobox app template",
+            "version": {
+                "major": 1,
+                "minor": 0,
+                "patch": 0
+            },
+            "contributors": [
+                {
+                    "name": "Mark Radin",
+                    "email": "openmiot@gmail.com"
+                }
+            ],
+            "links": [
+                {
+                    "displayName": "GitHub",
+                    "url": "https://github.com/OpenMiot/fobox"
+                }
+            ],
+            "includes": [
+                "spm_packages/Templates/fobox-app"
+            ]
+        }
+    },
     "apps": {}
 }

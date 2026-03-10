@@ -1,5 +1,5 @@
 from . import AdminBaseMigration
-from email_tools import send_verify_code
+from core.email_tools import send_verify_code
 import secrets
 import string
 import getpass

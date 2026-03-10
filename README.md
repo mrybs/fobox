@@ -3,6 +3,7 @@
 <div align="center">
     <img src="https://img.shields.io/github/license/openmiot/fobox"/>
     <img src="https://img.shields.io/badge/Python-3.14-red">
+    <img src="https://img.shields.io/badge/Running_on-Slinn2-%23FF00EE">
     <img src="https://img.shields.io/github/languages/code-size/openmiot/fobox">
     <img src="https://img.shields.io/github/issues/openmiot/fobox?color=%23eeaa00">
 </div>
@@ -27,20 +28,21 @@
 
 Откройте командную строку Windows, введите:
 ```sh
-# Установка пакетов с HTTP-сервером, с языком Geety и ORM, а также пакет для хеширования паролей
+# Установка пакета с HTTP-фреймворком
 pip install git+https://github.com/OpenMiot/slinn@nukeful
 
 slinn create www  # вместо www название папки с проектом
 cd www
 venv/Scripts/activate
 
-
+# Установка пакета с языком Geety и ORM, а также пакета для хеширования паролей
 pip install geety[postgres] bcrypt
 
 # Установка основных плагинов конструктора 
 # Здесь при запросе необходимо нажать Enter
 spm update
-spm install core@fobox.core auth@fobox.core admin@fobox.core
+spm install core@fobox.core auth@fobox.core admin@fobox.core fobox_app@fobox.core
+slinn template fobox_app app
 
 curl -OJ https://raw.githubusercontent.com/OpenMiot/fobox/refs/heads/main/dev/project.json.example
 move project.json.example project.json

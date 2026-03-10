@@ -4,3 +4,4 @@ project.json
 app/views/test.view.xml
 *.zip
 *manifest.json
+app/
