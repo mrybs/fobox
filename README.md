@@ -36,7 +36,7 @@ cd www
 venv/Scripts/activate
 
 # Установка пакета с языком Geety и ORM, а также пакета для хеширования паролей
-pip install geety[postgres] bcrypt
+py -m pip install geety[postgres] bcrypt
 
 # Установка основных плагинов конструктора 
 # Здесь при запросе необходимо нажать Enter
