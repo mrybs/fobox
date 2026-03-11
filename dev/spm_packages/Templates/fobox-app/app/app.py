@@ -11,6 +11,11 @@ dp = ApiDispatcher()
 gapp = G.App(context={
     'PNAME': ProjectAPI.get_config()['name']
 })
+palletes_storages = []
+for plugin in ProjectAPI.get_plugins():
+    storage = ProjectAPI.get_plugin_storage(plugin)
+    if storage.isdir('palletes'):
+        palletes_storages.append(storage.substorage('palletes'))
 
 for db in ProjectAPI.get_config()['dbs']:
     match get_driver_name(db['dsn']):
@@ -21,18 +26,18 @@ for db in ProjectAPI.get_config()['dbs']:
             ))
 
 views = Storage('views', package=__package__)
-palletes = Storage('Palletes')
 
 def reload_components():
     gapp.components = {}
     palletes_json = {}
-    with palletes('palletes.json', 'r') as palletes_json_f:
-        palletes_json = json.loads(palletes_json_f.read())
-    for pallete in palletes_json['palletes']:
-        if palletes.isdir(pallete['path']):
-            for components_fn in palletes.listdir(pallete['path']):
-                with palletes(pallete['path'] + '/' + components_fn, 'r') as components:
-                    gapp.load(components)
+    for palletes in palletes_storages:
+        with palletes('palletes.json', 'r') as palletes_json_f:
+            palletes_json = json.loads(palletes_json_f.read())
+        for pallete in palletes_json['palletes']:
+            if palletes.isdir(pallete['path']):
+                for components_fn in palletes.listdir(pallete['path']):
+                    with palletes(pallete['path'] + '/' + components_fn, 'r') as components:
+                        gapp.load(components)
 
 # Write your code down here
 @dp(AnyFilter)
