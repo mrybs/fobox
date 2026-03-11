@@ -1,4 +1,4 @@
-<h1 align="center">Fobox</h1>
+<h1 align="center">Фобокс</h1>
 <h3 align="center">Конструктор сайтов</h3>
 <div align="center">
     <img src="https://img.shields.io/github/license/openmiot/fobox"/>
@@ -9,7 +9,7 @@
 </div>
 
 <p>
-    <b>Fobox</b> — автономный конструктор сайтов на стеке <a href="https://github.com/OpenMiot">Miot</a>
+    <b>Фобокс</b> — автономный конструктор сайтов на стеке <a href="https://github.com/OpenMiot">Miot</a>
 <p>
 
 ### Возможности

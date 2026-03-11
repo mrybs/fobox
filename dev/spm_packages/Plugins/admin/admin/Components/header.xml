@@ -48,7 +48,7 @@
             }
         </script>
 
-        <h1 onclick="G.redirect(`/fobox`)">fobox</h1>
+        <h1 onclick="G.redirect(`/fobox`)">Фобокс</h1>
         <div id="header-menu"></div>
         <span><span class="material-symbols-outlined">person</span>$USER.name</span>
     </Header>
