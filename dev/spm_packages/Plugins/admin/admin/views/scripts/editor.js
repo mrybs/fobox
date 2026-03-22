@@ -1,3 +1,5 @@
+const VIEW = window.location.pathname.split('/').pop()
+
 let properties = new Properties(document.getElementById('properties'))
 let canvas = new Canvas(document.getElementById('canvas'), [], properties)
 let trash = new Trash(document.getElementById('trash'), canvas)
@@ -28,12 +30,12 @@ async function loadPalletes () {
 
 async function saveView () {
     let xml = canvas.toGeety()
-    r = await G.POST('/fobox/saveView', {}, xml)
+    r = await G.POST(`/fobox/saveView/${VIEW}`, {}, xml)
     alert(r.status === 200 ? 'Страница успешно сохранена' : 'Произошла ошибка при сохранении')
 }
 
 async function loadView () {
-    let resp = await G.GET('/fobox/loadView')
+    let resp = await G.GET(`/fobox/loadView/${VIEW}`)
     if (resp.status !== 200) return
     let xml = await (resp).text()
     const parser = new DOMParser()

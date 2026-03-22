@@ -124,6 +124,8 @@ class Component:
         tag = component.args.get('{Geety}Extends', 'div') if self.tag in page.components else self.tag
         component.args.pop('{Geety}Extends', None)
         self.args.pop('{Geety}Extends', None)
+        if self.tag in page.components and not self.is_def():
+            context['GID'] = self.uid
         sargs = await var_pattern_apply_args(self.args, context, page, prevs+[self])
         if self.tag in page.components and not self.is_def():
             signature = eval_args(await var_pattern_apply_args({
@@ -327,7 +329,7 @@ class Component:
                 if self.tag not in page.components or self.is_def():
                     for child in self:
                         if type(child) is str:
-                            html += await var_pattern_apply_content(child, context, page, prevs+[self])
+                            html += await var_pattern_apply_content(child.strip(), context, page, prevs+[self])
                         else:
                             html += await child.render(page, context, prevs+[self])
                 elif self.tag in page.components and not self.is_def():

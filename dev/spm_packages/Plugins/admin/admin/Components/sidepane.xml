@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<Geety xmlns:G="Geety">
+    <SidePane class="sidepane alt">
+        <G:Arg name="type" def="'left'"/>
+
+        <style>
+            .sidepane{
+                background: var(--bg-color);
+                padding: 10px;
+                z-index: 0;
+                border-radius: 20px;
+                max-width: 768px;
+                min-width: 192px;
+                display: flex;
+                flex-direction: column;
+                height: stretch;
+                height: -webkit-fill-available;
+                height: -mox-available;
+                max-height: calc(100vh - 45px - 30px);
+                position: sticky;
+                top: calc(45px + 15px);
+            }
+            .sidepane>a{
+                text-decoration: none;
+                padding: 5px;
+            }
+            .sidepane>a:hover{
+                text-decoration: underline;
+            }
+            .$GID{
+                <G:Switch>
+                    <G:Case cond="$type == 'left'">
+                        margin: 15px 7px 15px 15px;
+                    </G:Case>
+                    <G:Case cond="$type == 'right'">
+                        margin: 15px 15px 15px 7px;
+                    </G:Case>
+                </G:Switch>
+            }
+            *:has(>.sidepane){
+                display: flex;
+                flex-wrap: wrap;
+                align-items: flex-start;
+                flex-grow: 1;
+            }
+        </style>
+        <G:Content/>
+    </SidePane>
+</Geety>

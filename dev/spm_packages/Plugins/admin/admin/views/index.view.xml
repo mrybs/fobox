@@ -9,25 +9,32 @@
             <h1 onclick="G.redirect(`/fobox`)">fobox</h1>
             <span><span class="material-symbols-outlined">person</span>$USER.name</span>
         </Header>
-        
+
         <div>
-            <Content>
-                <WideButton label="'Перейти в редактор'" onclick="'G.redirect(`/fobox/editor`)'"/>
-            </Content>
-            <Content>
-                <h2>Пользователи</h2>
-                <DB:Query id="users" collection="_fobox_users">
-                    <DB:Find order="ASC id"/>
-                </DB:Query>
-                <G:For each="user:users">
-                    <LICard>
-                        $user.name#$user.id
-                        <G:If cond="$user.role == 2">
-                            <span style="'color:crimson;font-weight:bold;'">[ADMIN]</span>
-                        </G:If>
-                    </LICard>
-                </G:For>
-            </Content>
+            <SidePane type="'left'">
+                <a href="/fobox">Главная</a>
+                <a href="/fobox/pages">Страницы</a>
+            </SidePane>
+            
+            <div>
+                <Content>
+                    <h1>Добро пожаловать в Фобокс $FOBOX_VERSION</h1>
+                </Content>
+                <Content>
+                    <h2>Пользователи</h2>
+                    <DB:Query id="users" collection="_fobox_users">
+                        <DB:Find order="ASC id"/>
+                    </DB:Query>
+                    <G:For each="user:users">
+                        <LICard>
+                            $user.name#$user.id
+                            <G:If cond="$user.role == 2">
+                                <span style="'color:crimson;font-weight:bold;'">[ADMIN]</span>
+                            </G:If>
+                        </LICard>
+                    </G:For>
+                </Content>
+            </div>
         </div>
     </View>
 </Geety>

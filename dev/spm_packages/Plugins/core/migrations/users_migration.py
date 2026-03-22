@@ -12,7 +12,7 @@ class UsersMigration(CoreBaseMigration):
         if hasattr(self, '_applied'):
             return False
         async with await self.fobox_db.acquire() as conn:
-            return '_fobox_users' in await conn.collections()
+            return '_fobox_users' not in await conn.collections()
 
     async def apply(self):
         async with await self.fobox_db.acquire() as conn:

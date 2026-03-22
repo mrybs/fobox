@@ -1,5 +1,11 @@
 class Geety{
     redirect = (href) => { window.location.href = href }
+    open = (href) => {
+        const link = document.createElement('a')
+        link.href = href
+        link.target = '_blank'
+        link.click()
+    }
     $ = (query) => { return document.querySelector(query) }
     GET = async (url, params={}) => {
         const _url = new URL(url, document.baseURI)
@@ -8,6 +14,7 @@ class Geety{
     }
     GET_JSON = async (url, params={}) => { return await (await this.GET(url, params)).json() }
     POST = async (url, headers={}, body={}) => { return await fetch(url, { method: 'POST', 'headers': headers, 'body': body }) }
+    DELETE = async (url) => { return await fetch(url, { method: 'DELETE' }) }
     rgbToHex = (rgb) => {
         if (rgb.startsWith('#')) {
             return rgb.toUpperCase()

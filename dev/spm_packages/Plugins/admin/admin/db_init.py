@@ -5,7 +5,8 @@ import geety as G
 
 
 gapp = G.App(context={
-    'PNAME': ProjectAPI.get_config()['name']
+    'PNAME': ProjectAPI.get_config()['name'],
+    'FOBOX_VERSION': '26.3j'
 })
 
 

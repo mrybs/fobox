@@ -6,6 +6,8 @@
                 display: flex;
                 justify-content: center;
                 flex-wrap: wrap;
+                flex-grow: 1;
+                align-content: flex-start;
             }
             .content{
                 background: var(--bg-color);
@@ -14,6 +16,7 @@
                 margin: 15px;
                 border-radius: 20px;
                 max-width: 768px;
+                min-width: 334px;
                 width: stretch;
                 width: -moz-available;
                 width: -webkit-fill-available;
@@ -24,6 +27,7 @@
                 padding: 4px 0;
             }
         </style>
+        
         <G:Content/>
     </Content>
 </Geety>

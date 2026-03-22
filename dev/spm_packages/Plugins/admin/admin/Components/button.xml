@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<Geety xmlns:G="Geety">
+    <Button G:Extends="button" class="button" onclick="$onclick">
+        <G:Arg name="onclick"/>
+        <G:Arg name="label"/>
+        <G:Arg name="icon" def="''"/>
+
+        <style>
+            .button{
+                background: var(--button-background);
+                padding: 10px;
+                border: 0;
+                border-radius: 10px;
+                cursor: pointer;
+            }
+            .button>.material-symbols-outlined{
+                font-size: 16px;
+                vertical-align: text-bottom;
+            }
+            .button>span:not(.material-symbols-outlined){
+                padding: 0 3px;
+            }
+        </style>
+
+        <span class="material-symbols-outlined">$icon</span>
+        <span>$label</span>
+    </Button>
+</Geety>

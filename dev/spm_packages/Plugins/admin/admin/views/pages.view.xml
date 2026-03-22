@@ -1,0 +1,191 @@
+<?xml version="1.0"?>
+<Geety xmlns:G="Geety" xmlns:DB="DB@1">
+    <View>
+        <FoboxBase/>
+        <G:Page
+            title="Страницы | Fobox"
+            robots="noindex, nofollow"/>
+
+        <Header>
+            <h1 onclick="G.redirect(`/fobox`)">fobox</h1>
+            <span><span class="material-symbols-outlined">person</span>$USER.name</span>
+        </Header>
+        
+        <div>
+            <SidePane type="'left'">
+                <a href="/fobox">Главная</a>
+                <a href="/fobox/pages">Страницы</a>
+            </SidePane>
+            
+            <div>
+                <Content>
+                    <h2>Страницы</h2>
+                    <Table id="'pages'">
+                        <thead>
+                            <tr>
+                                <th></th>
+                                <th class="stretch">Путь</th>
+                                <th>Владелец</th>
+                                <th>Используется</th>
+                                <th>Дата создания</th>
+                                <th>Дата обновления</th>
+                            </tr>
+                        </thead>
+                        <tbody></tbody>
+                        <tfoot>
+                            <TableRow>
+                                <Button label="'Создать страницу'" icon="'add_notes'" onclick="'createPage()'"/>
+                                <Button label="'Удалить выбранные'" icon="'delete'" onclick="'deleteSelected()'"/>
+                            </TableRow>
+                        </tfoot>
+                    </Table>
+                </Content>
+            </div>
+        </div>
+
+        
+        <script src="/fobox/scripts/modal.js"/>
+
+        <script>
+            <![CDATA[
+                const ROOT = '$ROOT'
+
+                let usernames = new Map()
+
+                let selected = new Map()
+
+                let table = document.getElementById('pages')
+                let tbody = table.getElementsByTagName('tbody')[0]
+
+                function loadPages () {
+                    G.GET('/fobox/api/pages').then(async resp => {
+                        let pages = await resp.json()
+                        for (let page of pages) {
+                            if (!usernames.has(page.creator_id)) {
+                                let creator = await (await G.GET(`/api/users/${page.creator_id}`)).json()
+                                usernames.set(page.creator_id, creator.name)
+                            }
+                        }
+                        tbody.innerHTML = ''
+                        for (let page of pages) {
+                            page.created_at = new Date(page.created_at*1000)
+                            page.updated_at = new Date(page.updated_at*1000)
+                            let elem = document.createElement('tr')
+                            elem.innerHTML = `
+                                <td><input type="checkbox" class="select-page"></td>
+                                <td><a href="/fobox/editor/${page.path}" target="_blank">${page.path}</a></td>
+                                <td>${usernames.get(page.creator_id)}</td>
+                                <td>${page.enabled}</td>
+                                <td>${page.created_at.toDateString()}</td>
+                                <td>${page.updated_at.toDateString()}</td>
+                            `
+                            elem.querySelector('.select-page').onclick = (event) => {
+                                if (event.target.value === 'on') {
+                                    selected.set(page.path, elem)
+                                } else {
+                                    selected.delete(page.path)
+                                }
+                                event.target.value = event.target.value === 'on' ? 'off' : 'on'
+                            }
+                            tbody.appendChild(elem)
+                        }
+                    })
+                }
+
+                function createPage () {
+                    let modal = new Modal({
+                        title: 'Создание страницы',
+                        content: `
+                            <div>
+                                <p>
+                                    Путь к странице должен быть уникальным.
+                                    Страница после публикации будет доступна по ссылке <pre class="bold">$ROOT{ЗДЕСЬ ПУТЬ}</pre>.
+                                    Впоследствии путь можно будет изменить
+                                </p>
+                                </br>
+                                <label for="page-path">Путь</label><input id="page-path" placeholder="index"></input>
+                                </br>
+                                </br>
+                                <p>
+                                    Примеры путей:
+                                    <ul>
+                                        <li>index — <pre>${ROOT}</pre> и <pre>${ROOT}&ZeroWidthSpace;index</pre></li>
+                                        <li>about — <pre>${ROOT}&ZeroWidthSpace;about</pre></li>
+                                        <li>contacts — <pre>${ROOT}&ZeroWidthSpace;contacts</pre></li>
+                                    </ul>
+                                </p>
+                            </div>
+                        `,
+                        buttons: [
+                            {
+                                label: 'Создать и перейти',
+                                action: (event, modal) => {
+                                    let pagePath = modal.content.querySelector('#page-path')
+                                    G.POST(`/fobox/api/pages/${pagePath.value}`).then(resp => {
+                                        modal.close()
+                                        resp.json().then(stat => {
+                                            if (resp.ok && stat.status === 'ok') {
+                                                loadPages()
+                                            } else if (resp.ok) {
+                                                (new Alert(stat.message)).show()
+                                            }
+                                            G.open(`${ROOT}fobox/editor/${pagePath.value}`)
+                                        })
+                                    })
+                                },
+                                accent: true,
+                                icon: 'new_window'
+                            },
+                            {
+                                label: 'Создать и закрыть',
+                                action: async (event, modal) => {
+                                    let pagePath = modal.content.querySelector('#page-path')
+                                    tbody.innerHTML = ''
+                                    await G.POST(`/fobox/api/pages/${pagePath.value}`)
+                                    await loadPages()
+                                    modal.close()
+                                },
+                                accent: false,
+                                icon: 'add_circle'
+                            }
+                        ]
+                    })
+                    modal.show()
+                }
+
+                function deleteSelected () {
+                    if ([...selected.keys()].length === 0) {
+                        (new Alert('Страницы не выбраны')).show()
+                        return
+                    }
+                    let content = 'Вы уверены, что хотите удалить следующие страницы?\n<ol>'
+                    selected.keys().forEach(key => {
+                        content += `<li>${key}</li>`
+                    })
+                    content += '</ol>'
+                    let modal = new Modal({
+                        title: 'Удаление страниц',
+                        content: content,
+                        buttons: [
+                            {
+                                label: 'Удалить страницы',
+                                accent: true,
+                                action: (event, modal) => {
+                                    selected.keys().forEach(async key => {
+                                        await G.DELETE(`/fobox/api/pages/${key}`)
+                                        selected.get(key).remove()
+                                    })
+                                    modal.close()
+                                    ;(new Alert('Страницы удалены')).show()
+                                }
+                            }
+                        ]
+                    })
+                    modal.show()
+                }
+
+                loadPages()
+            ]]>
+        </script>
+    </View>
+</Geety>

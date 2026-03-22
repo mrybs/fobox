@@ -8,6 +8,7 @@
                 "minor": 0,
                 "patch": 0
             },
+            "repository": "fobox.core",
             "contributors": [
                 {
                     "name": "Mark Radin",
@@ -26,7 +27,7 @@
                 "spm_packages/Plugins/admin"
             ],
             "dependencies": [
-                "core@fobox.core"
+                "core"
             ],
             "plugin": {
                 "dispatchers": [
@@ -42,6 +43,7 @@
                 "minor": 0,
                 "patch": 0
             },
+            "repository": "fobox.core",
             "contributors": [
                 {
                     "name": "Mark Radin",
@@ -59,9 +61,7 @@
             "includes": [
                 "spm_packages/Plugins/auth"
             ],
-            "dependencies": [
-                "admin@fobox.core"
-            ],
+            "dependencies": [],
             "plugin": {
                 "dispatchers": [
                     "dp"
@@ -76,6 +76,7 @@
                 "minor": 0,
                 "patch": 0
             },
+            "repository": "local",
             "contributors": [
                 {
                     "name": "Mark Radin",
@@ -90,6 +91,12 @@
             ],
             "enabled": true,
             "zip": false,
+            "dependencies": [],
+            "plugin": {
+                "dispatchers": [
+                    "dp"
+                ]
+            },
             "includes": [
                 "spm_packages/Plugins/core"
             ]
@@ -104,6 +111,7 @@
                 "minor": 0,
                 "patch": 0
             },
+            "repository": "local",
             "contributors": [
                 {
                     "name": "Mark Radin",

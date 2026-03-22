@@ -12,8 +12,13 @@ import geety as G
 dp = ApiDispatcher('localhost', prefix='fobox')
 views = Storage('views', package=__package__)
 components = Storage('Components', package=__package__)
-palletes = Storage('Palletes')
 site_app = Storage('app')
+
+palletes_storages = []
+for plugin in ProjectAPI.get_plugins():
+    storage = ProjectAPI.get_plugin_storage(plugin)
+    if storage.isdir('palletes'):
+        palletes_storages.append(storage.substorage('palletes'))
 
 
 class AdminOnly(IMiddleware):
@@ -40,6 +45,21 @@ def reload_components():
             with components(component_file, 'r') as component:
                 gapp.load(component)
 
+def reload_palletes():
+    palletes_json = {}
+    palletes_all = {}
+    for palletes in palletes_storages:
+        with palletes('palletes.json', 'r') as palletes_json_f:
+            palletes_json = json.loads(palletes_json_f.read())
+        for pallete in palletes_json['palletes']:
+            if palletes.isdir(pallete['path']):
+                for components_fn in palletes.listdir(pallete['path']):
+                    with palletes(pallete['path'] + '/' + components_fn, 'r') as components:
+                        if pallete['path'] not in palletes_all:
+                            palletes_all[pallete['path']] = []
+                        palletes_all[pallete['path']].append(components.read())
+    return palletes_json, palletes_all
+
 
 @dp.get()
 @AuthMiddleware(fobox_db)
@@ -53,10 +73,23 @@ async def index(request: AsyncRequest, user: dict):
             'USER': user
         }), content_type='text/html; charset=utf-8')
 
-@dp.get('editor')
+@dp.get('pages')
 @AuthMiddleware(fobox_db)
 @AdminOnly()
-async def editor(request: AsyncRequest, user: dict):
+async def pages(request: AsyncRequest, user: dict):
+    reload_components()
+    with views('pages.view.xml', 'r', 'utf-8') as view:
+        page = gapp.new_page(view)
+        page.set_entry_point('View')
+        await request.respond(HttpResponse, await page.html(context={
+            'USER': user,
+            'ROOT': ProjectAPI.get_link()
+        }), content_type='text/html; charset=utf-8')
+
+@dp.get('editor/<str view>')
+@AuthMiddleware(fobox_db)
+@AdminOnly()
+async def editor(request: AsyncRequest, user: dict, view: str):
     reload_components()
     with views('editor.view.xml', 'r', 'utf-8') as view:
         page = gapp.new_page(view)
@@ -70,50 +103,106 @@ async def editor(request: AsyncRequest, user: dict):
             'USER': user
         }), content_type='text/html; charset=utf-8')
 
+@dp.get('api/pages')
+@AuthMiddleware(fobox_db, api=True)
+@AdminOnly()
+async def get_pages(request: AsyncRequest, user: dict):
+    async with await fobox_db.acquire() as conn:
+        await request.respond(HttpResponse, json.dumps(
+            [
+                {
+                    'path': page['path'],
+                    'creator_id': page['creator_id'],
+                    'enabled': page['enabled'],
+                    'created_at': page['created_at'].timestamp(),
+                    'updated_at': page['updated_at'].timestamp()
+                }
+                for page in await conn._fobox_pages.find({})
+            ], ensure_ascii=False
+        ))
+
+@dp.post('api/pages/<str path>')
+@AuthMiddleware(fobox_db, api=True)
+@AdminOnly()
+async def create_page(request: AsyncRequest, user: dict, path: str):
+    async with await fobox_db.acquire() as conn:
+        if await conn._fobox_pages.count({ 'path': path }):
+            await request.respond(
+                HttpJSONResponse,
+                status='failed',
+                message=f'page {path} exists'
+            )
+            return
+        await conn._fobox_pages.insert({
+            'path': path,
+            'creator_id': user['id']
+        })
+        await request.respond(HttpJSONResponse, status='ok')
+
+
+@dp.delete('api/pages/<str path>')
+@AuthMiddleware(fobox_db, api=True)
+@AdminOnly()
+async def delete_page(request: AsyncRequest, user: dict, path: str):
+    async with await fobox_db.acquire() as conn:
+        if not await conn._fobox_pages.count({ 'path': path }):
+            await request.respond(
+                HttpJSONResponse,
+                status='failed',
+                message=f'page {path} not exists'
+            )
+            return
+        await conn._fobox_pages.delete({ 'path': path })
+        await request.respond(HttpJSONResponse, status='ok')
+
+
 @dp.get('palletes')
 @AuthMiddleware(fobox_db, api=True)
 @AdminOnly()
 async def get_palletes(request: AsyncRequest, user: dict):
-    if not palletes.isfile('palletes.json'):
-        with palletes('palletes.json', 'w') as f:
-            json.dump({
-                'palletes': []
-            }, f, ensure_ascii=False, indent=4)
-    await request.respond(HttpRender, 'palletes.json', storage=palletes)
+    palletes_json, palletes_all = reload_palletes()
+    await request.respond(HttpResponse, json.dumps(
+        palletes_json, ensure_ascii=False
+    ))
 
 @dp.get('palletes/<str path>')
 @AuthMiddleware(fobox_db, api=True)
 @AdminOnly()
 async def get_pallete(request: AsyncRequest, user: dict, path: str):
-    if not palletes.isdir(path):
+    palletes_json, palletes_all = reload_palletes()
+    if path not in palletes_all:
         return 404
     result = {
         'components': []
     }
-    for component in palletes.listdir(path):
-        with palletes(path + '/' + component, 'r') as f:
-            #component = G.xml_parser.parse_component(f)
-            #print(component)
-            component = f.read()
-            component = ''.join([line.strip()+'\n' for line in component.split('\n')])
-            result['components'].append(component)
+    for component in palletes_all[path]:
+        component = ''.join([line.strip()+'\n' for line in component.split('\n')])
+        result['components'].append(component)
     await request.respond(HttpJSONResponse, **result)
 
-@dp.post('saveView')
+@dp.post('savePage/<str path>')
 @AuthMiddleware(fobox_db, api=True)
 @AdminOnly()
-async def save_view(request: AsyncRequest, user: dict):
+async def save_view(request: AsyncRequest, user: dict, path: str):
+    async with await fobox_db.acquire() as conn:
+        if not await conn._fobox_pages.count({'path': path}):
+            await request.respond(
+                HttpJSONResponse,
+                status='failed',
+                message=f'page {path} exists'
+            )
+            return
     xml = await request.body.get()
-    with site_app('views/test.view.xml', 'wb') as f:
+    with site_app(f'views/{path}.view.xml', 'wb') as f:
         f.write(xml)
     await request.respond(HttpJSONResponse, status='ok')
 
-@dp.get('loadView')
+@dp.get('loadPage/<str path>')
 @AuthMiddleware(fobox_db, api=True)
 @AdminOnly()
-async def load_view(request: AsyncRequest, user: dict):
-    if site_app.isfile('views/test.view.xml'):
-        await request.respond(HttpRender, 'views/test.view.xml', storage=site_app)
+async def load_view(request: AsyncRequest, user: dict, path: str):
+    if site_app.isfile(f'views/{path}.view.xml'):
+        await request.respond(HttpRender, f'views/{path}.view.xml', storage=site_app)
     else:
         return 404
 
@@ -125,6 +214,7 @@ async def ping(request: AsyncRequest):
 
 
 dp  .static('/styles/root.css', HttpRender, 'styles/root.css', storage=views)\
+    .static('/styles/modal.css', HttpRender, 'styles/modal.css', storage=views)\
     .static('/scripts/editor/canvas.js', HttpRender, 'scripts/editor/canvas.js', storage=views)\
     .static('/scripts/editor/component.js', HttpRender, 'scripts/editor/component.js', storage=views)\
     .static('/scripts/editor/contextmenu.js', HttpRender, 'scripts/editor/contextmenu.js', storage=views)\
@@ -141,4 +231,5 @@ dp  .static('/styles/root.css', HttpRender, 'styles/root.css', storage=views)\
     .static('/styles/editor/properties.css', HttpRender, 'styles/editor/properties.css', storage=views)\
     .static('/styles/editor/root.css', HttpRender, 'styles/editor/root.css', storage=views)\
     .static('/styles/editor/trash.css', HttpRender, 'styles/editor/trash.css', storage=views)\
-    .static('/scripts/editor.js', HttpRender, 'scripts/editor.js', storage=views)
+    .static('/scripts/editor.js', HttpRender, 'scripts/editor.js', storage=views)\
+    .static('/scripts/modal.js', HttpRender, 'scripts/modal.js', storage=views)

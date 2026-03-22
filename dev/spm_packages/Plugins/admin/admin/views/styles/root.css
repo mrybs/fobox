@@ -11,6 +11,8 @@
     --border: #80808c;
     --blur-border: #80808c55;
     --header-background: #ecececbf;
+    --alt-text-color: #B4B5BE;
+    --alt-bg-color: #3A3A40;
 
     --accent-color: #007bff;
     --accent-transparent-color: #007bff7F;
@@ -41,16 +43,25 @@
     --ava-outline-color2: #0893DD;
 }
 * {
-    margin: 0;
-    padding: 0;
     box-sizing: border-box;
     word-wrap: break-word;
     font-weight: 400;
-    font-family: 'Ubuntu';
+    font-family: 'Ubuntu', Arial, sans-serif;
+}
+*:not(li::marker){
+    padding: 0;
+}
+*:not(ol):not(ul):not(h1){
+    margin: 0;
+}
+pre{
+    font-family: 'Ubuntu Mono', monospace;
+    display: inline;
 }
 h1{
     margin-top: 15px;
     user-select: none;
+    text-align: center;
 }
 h2{
     font-weight: 550;
@@ -60,6 +71,9 @@ html, body {
     color: var(--text-color);
     background: var(--secondary-bg);
     width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 a{
     color: var(--text-color)
@@ -88,4 +102,44 @@ body::-webkit-scrollbar-thumb {
 }
 body::-webkit-scrollbar-thumb:hover {
   background: var(--text-color);
+}
+.alt, .alt *{
+    background: var(--alt-bg-color) !important;
+    color: var(--alt-text-color) !important;
+}
+.accent, .accent * {
+    background: var(--accent-color) !important;
+    color: var(--accent-text-color) !important;
+}
+.bold, .bold *{
+    font-weight: 550;
+}
+input[type="checkbox"]{
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    border: var(--border) solid 1px;
+    border-radius: 7px;
+    cursor: pointer;
+    transition: background ease .1s;
+    color: var(--accent-text-color);
+}
+input[type="checkbox"]:checked{
+    background: var(--accent-color);
+}
+input[type="checkbox"]:checked::after{
+    content: "x";
+    width: 23px;
+    height: 23px;
+    display: block;
+    text-align: center;
+    font-size: 16px;
+    font-weight: 800;
+    transition: 500ms;
+    overflow: hidden;
+}
+input:not(input[type="checkbox"]){
+    padding: 3px;
+    font-size: 16px;
+    margin: 0 7px;
 }

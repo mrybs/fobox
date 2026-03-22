@@ -9,7 +9,8 @@ class SessionsMigration(CoreBaseMigration):
         )
 
     async def check(self) -> bool:
-        return True
+        async with await self.fobox_db.acquire() as conn:
+            return '_fobox_sessions' not in await conn.collections()
 
     async def apply(self):
         async with await self.fobox_db.acquire() as conn:

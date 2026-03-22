@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<Geety xmlns:G="Geety">
+    <TableRow G:Extends="tr">
+        <style>
+            .tablerow-td{
+                text-align: center;
+            }
+        </style>
+
+        <td colspan="100%" class="tablerow-td">
+            <G:Content/>
+        </td>
+    </TableRow>
+</Geety>
