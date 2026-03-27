@@ -5,16 +5,20 @@
         <G:Page
             title="Страницы | Fobox"
             robots="noindex, nofollow"/>
-
         <Header>
             <h1 onclick="G.redirect(`/fobox`)">fobox</h1>
             <span><span class="material-symbols-outlined">person</span>$USER.name</span>
         </Header>
         
         <div>
-            <SidePane type="'left'">
-                <a href="/fobox">Главная</a>
-                <a href="/fobox/pages">Страницы</a>
+            <SidePane type="'left'" class="'sidepane-with-footer'">
+                <div>
+                    <a href="/fobox">Главная</a>
+                    <a href="/fobox/pages">Страницы</a>
+                </div>
+                <div>
+                   © "Миот" 2026
+                </div>
             </SidePane>
             
             <div>

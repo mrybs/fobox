@@ -215,6 +215,7 @@ async def ping(request: AsyncRequest):
 
 dp  .static('/styles/root.css', HttpRender, 'styles/root.css', storage=views)\
     .static('/styles/modal.css', HttpRender, 'styles/modal.css', storage=views)\
+    .static('/styles/styles.css', HttpRender, 'styles/styles.css', storage=views)\
     .static('/scripts/editor/canvas.js', HttpRender, 'scripts/editor/canvas.js', storage=views)\
     .static('/scripts/editor/component.js', HttpRender, 'scripts/editor/component.js', storage=views)\
     .static('/scripts/editor/contextmenu.js', HttpRender, 'scripts/editor/contextmenu.js', storage=views)\
@@ -232,4 +233,5 @@ dp  .static('/styles/root.css', HttpRender, 'styles/root.css', storage=views)\
     .static('/styles/editor/root.css', HttpRender, 'styles/editor/root.css', storage=views)\
     .static('/styles/editor/trash.css', HttpRender, 'styles/editor/trash.css', storage=views)\
     .static('/scripts/editor.js', HttpRender, 'scripts/editor.js', storage=views)\
-    .static('/scripts/modal.js', HttpRender, 'scripts/modal.js', storage=views)
+    .static('/scripts/modal.js', HttpRender, 'scripts/modal.js', storage=views)\
+    .static('/res/cover.png', HttpRender, 'res/cover.png', storage=views)

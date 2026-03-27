@@ -1,0 +1,20 @@
+<?xml version="1.0"?>
+<Geety xmlns:G="Geety">
+    <Cover G:Extends="img" class="cover" src="$src">
+        <G:Arg name="src"/>
+
+        <style>
+            .cover{
+                padding: 10px;
+                border-radius: 50px;
+                max-width: 768px;
+                min-width: 334px;
+                max-height: 250px;
+                object-fit: cover;
+                width: stretch;
+                width: -moz-available;
+                width: -webkit-fill-available;
+            }
+        </style>
+    </Cover>
+</Geety>

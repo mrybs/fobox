@@ -1,0 +1,32 @@
+{
+    "manifestVersion": 1,
+    "type": "plugin",
+    "displayName": "Auth",
+    "description": "Base auth support in Fobox",
+    "zipSafe": true,
+    "version": {
+        "major": 1,
+        "minor": 0,
+        "patch": 3
+    },
+    "contributors": [
+        {
+            "name": "Mark Radin",
+            "email": "openmiot@gmail.com"
+        }
+    ],
+    "links": [
+        {
+            "displayName": "GitHub",
+            "url": "https://github.com/OpenMiot/fobox"
+        }
+    ],
+    "dependencies": [
+        "admin"
+    ],
+    "plugin": {
+        "dispatchers": [
+            "dp"
+        ]
+    }
+}

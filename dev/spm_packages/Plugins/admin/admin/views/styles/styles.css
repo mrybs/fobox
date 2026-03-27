@@ -1,0 +1,4 @@
+.sidepane-with-footer{
+    display: flex;
+    justify-content: space-between;
+}

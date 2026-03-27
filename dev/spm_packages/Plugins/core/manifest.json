@@ -1,0 +1,29 @@
+{
+    "manifestVersion": 1,
+    "type": "plugin",
+    "displayName": "Core",
+    "description": "Core plugin for Fobox",
+    "zipSafe": true,
+    "version": {
+        "major": 1,
+        "minor": 0,
+        "patch": 3
+    },
+    "contributors": [
+        {
+            "name": "Mark Radin",
+            "email": "openmiot@gmail.com"
+        }
+    ],
+    "links": [
+        {
+            "displayName": "GitHub",
+            "url": "https://github.com/OpenMiot/fobox"
+        }
+    ],
+    "plugin": {
+        "dispatchers": [
+            "dp"
+        ]
+    }
+}

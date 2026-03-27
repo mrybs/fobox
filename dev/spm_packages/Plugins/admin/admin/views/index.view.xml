@@ -11,14 +11,21 @@
         </Header>
 
         <div>
-            <SidePane type="'left'">
-                <a href="/fobox">Главная</a>
-                <a href="/fobox/pages">Страницы</a>
+            <SidePane type="'left'" class="'sidepane-with-footer'">
+                <div>
+                    <a href="/fobox">Главная</a>
+                    <a href="/fobox/pages">Страницы</a>
+                </div>
+                <div>
+                   © "Миот" 2026
+                </div>
             </SidePane>
             
             <div>
                 <Content>
                     <h1>Добро пожаловать в Фобокс $FOBOX_VERSION</h1>
+
+                    <Cover src="'/fobox/res/cover.png'"/>
                 </Content>
                 <Content>
                     <h2>Пользователи</h2>

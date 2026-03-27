@@ -24,7 +24,6 @@
 - Python 3.14 и выше
 - PostgreSQL
 - Git
-- Curl
 
 Откройте командную строку Windows, введите:
 ```sh
@@ -41,49 +40,13 @@ py -m pip install geety[postgres] bcrypt
 # Установка основных плагинов конструктора 
 # Здесь при запросе необходимо нажать Enter
 spm update
-spm install core@fobox.core auth@fobox.core admin@fobox.core fobox_app@fobox.core
-slinn template fobox_app app
+spm install core@fobox.core auth@fobox.core admin@fobox.core fobox-app@fobox.core
+slinn template fobox-app app
 
-curl -OJ https://raw.githubusercontent.com/OpenMiot/fobox/refs/heads/main/dev/project.json.example
-move project.json.example project.json
-
-explorer .
-```
-В открывшемся окне проводника будет файл project.json. Измените его (например, через блокнот). 
-
-В части файла, указанной ниже, замените `postgres` на пользователя PostgreSQL и `1234` на его пароль (пользователь и пароль задаются при установке PostgreSQL)
-```json
-"dbs": [
-    {
-        "dsn": "postgres://postgres:1234@localhost/postgres",
-        "server_settings": {
-            "search_path": "public"
-        }
-    }
-]
-```
-В части файла, указанной ниже, замените:
-- `smtp.gmail.com` на SMTP сервер вашего почтового клиента
-- `example@gmail.com` на ваш адрес электронной почты
-- `abcd efgh jklm nopq` на пароль 
-- `587` — порт SMTP сервера, но его скорее всего менять не требуется
-
-```json
-"smtp": {
-    "server_host": "smtp.gmail.com",
-    "server_port": 587,
-    "address": "example@gmail.com",
-    "password": "abcd efgh jklm nopq"
-}
-```
-Соответвующие данные можно узнать у почтового сервиса. (используйте поисковик Google или Яндекс)
-
-После внесения необходимых изменений, введите в командную строку Windows:
-```sh
 # Применение миграций
 slinn makemigrations
 ```
-Эта команда попросит создать учетную запись администратора, следуйте инструкциям
+Последняя команда вас попросит указать данные для подключения к БД, к почтовому сервису и создаст учетную запись администратора, следуйте инструкциям
 
 ## Запуск
 Теперь, когда сайт установлен, его нужно запустить. В папке с сервером запустите файл `start.bat` для Windows
