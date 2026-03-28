@@ -48,17 +48,22 @@ def reload_components():
 def reload_palletes():
     palletes_json = {}
     palletes_all = {}
+    palletes_previews = {}
     for palletes in palletes_storages:
         with palletes('palletes.json', 'r') as palletes_json_f:
             palletes_json = json.loads(palletes_json_f.read())
         for pallete in palletes_json['palletes']:
             if palletes.isdir(pallete['path']):
                 for components_fn in palletes.listdir(pallete['path']):
-                    with palletes(pallete['path'] + '/' + components_fn, 'r') as components:
-                        if pallete['path'] not in palletes_all:
-                            palletes_all[pallete['path']] = []
-                        palletes_all[pallete['path']].append(components.read())
-    return palletes_json, palletes_all
+                    if components_fn.endswith('.xml'):
+                        with palletes(pallete['path'] + '/' + components_fn, 'r') as components:
+                            if pallete['path'] not in palletes_all:
+                                palletes_all[pallete['path']] = []
+                            palletes_all[pallete['path']].append(components.read())
+                    elif components_fn.endswith('.png'):
+                        palletes_previews[components_fn.removesuffix('.png')] = palletes(pallete['path'] + '/' + components_fn, 'rb')
+
+    return palletes_json, palletes_all, palletes_previews
 
 
 @dp.get()
@@ -160,7 +165,7 @@ async def delete_page(request: AsyncRequest, user: dict, path: str):
 @AuthMiddleware(fobox_db, api=True)
 @AdminOnly()
 async def get_palletes(request: AsyncRequest, user: dict):
-    palletes_json, palletes_all = reload_palletes()
+    palletes_json, _, _ = reload_palletes()
     await request.respond(HttpResponse, json.dumps(
         palletes_json, ensure_ascii=False
     ))
@@ -169,7 +174,7 @@ async def get_palletes(request: AsyncRequest, user: dict):
 @AuthMiddleware(fobox_db, api=True)
 @AdminOnly()
 async def get_pallete(request: AsyncRequest, user: dict, path: str):
-    palletes_json, palletes_all = reload_palletes()
+    _, palletes_all, _ = reload_palletes()
     if path not in palletes_all:
         return 404
     result = {
@@ -179,6 +184,16 @@ async def get_pallete(request: AsyncRequest, user: dict, path: str):
         component = ''.join([line.strip()+'\n' for line in component.split('\n')])
         result['components'].append(component)
     await request.respond(HttpJSONResponse, **result)
+
+@dp.get('previews/<str component>')
+@AuthMiddleware(fobox_db, api=True)
+@AdminOnly()
+async def get_preview(request: AsyncRequest, user: dict, component: str):
+    _, _, palletes_previews = reload_palletes()
+    if component not in palletes_previews:
+        return 404
+    with palletes_previews[component] as f:
+        await request.respond(HttpResponse, f.read())
 
 @dp.post('savePage/<str path>')
 @AuthMiddleware(fobox_db, api=True)

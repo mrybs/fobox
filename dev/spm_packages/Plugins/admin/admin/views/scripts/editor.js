@@ -15,7 +15,7 @@ async function loadPalletes () {
     }
     await Promise.all(palletes.map(async pallete_meta => {
         let pallete_element = document.getElementById(`_EditorPallete-${pallete_meta.name}`)
-        pallete_element.classList.add('pallete')
+        pallete_element.classList.add('editor-pallete')
         pallete_element.innerHTML += `
             <div>${pallete_meta.name}</div>
         `
@@ -28,14 +28,22 @@ async function loadPalletes () {
     }))
 }
 
-async function saveView () {
+async function savePage () {
     let xml = canvas.toGeety()
-    r = await G.POST(`/fobox/saveView/${VIEW}`, {}, xml)
+    r = await G.POST(`/fobox/savePage/${VIEW}`, {}, xml)
     alert(r.status === 200 ? 'Страница успешно сохранена' : 'Произошла ошибка при сохранении')
 }
 
-async function loadView () {
-    let resp = await G.GET(`/fobox/loadView/${VIEW}`)
+async function openPage() {
+    if (VIEW === 'index') {
+        G.open(`/`)
+    } else {
+        G.open(`/${VIEW}`)
+    }
+}
+
+async function loadPage () {
+    let resp = await G.GET(`/fobox/loadPage/${VIEW}`)
     if (resp.status !== 200) return
     let xml = await (resp).text()
     const parser = new DOMParser()
@@ -63,9 +71,10 @@ async function loadComponent (element, parent) {
 async function main () {
     properties.display(canvas.root_component)
     canvas.root_component.container_element.appendChild(document.getElementsByClassName('editor-info-h2')[0])
-    addButtonToHeader('Сохранить страницу', saveView)
+    addButtonToHeader('Сохранить страницу', savePage)
+    addButtonToHeader('Открыть страницу', openPage)
     await loadPalletes()
-    await loadView()
+    await loadPage()
 }
 
 main()

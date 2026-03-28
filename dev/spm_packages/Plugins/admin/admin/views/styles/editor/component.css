@@ -48,3 +48,14 @@
 .editor-pallete .editor-component-properties-button{
     display: none;
 }
+.editor-component .editor-component-preview{
+    display: none;
+}
+.editor-pallete .editor-component-content>*:not(.editor-component-preview){
+    display: none !important;
+}
+.editor-pallete .editor-component-preview{
+    display: inherit !important;
+    max-width: 100%;
+    object-fit: scale-down;
+}

@@ -1,11 +1,14 @@
 <?xml version="1.0"?>
 <Geety xmlns:Geety="Geety" xmlns:F="Fobox">
-    <HelloWorld>
+    <HelloWorld class="helloworld">
         <F:Name>Приветственное сообщение</F:Name>
 
         <style>
-            h1{
+            .helloworld h1{
                 font-weight: bold;
+            }
+            .helloworld {
+                max-width: 768px;   
             }
         </style>
 

@@ -40,8 +40,8 @@ async def send_email(receiver_email, subject, body):
     await asyncio.get_event_loop().run_in_executor(
         None,
         _send_email,
-        CONFIG['smtp']['server_host'],
-        CONFIG['smtp']['server_port'],
+        CONFIG['smtp']['serverHost'],
+        CONFIG['smtp']['serverPort'],
         CONFIG['smtp']['address'],
         CONFIG['smtp']['password'],
         receiver_email,

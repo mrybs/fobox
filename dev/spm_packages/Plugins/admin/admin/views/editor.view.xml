@@ -62,12 +62,12 @@
             #palletes {
                 overflow-y: scroll;
             }
-            .pallete {
+            .editor-pallete {
                 border: 1px solid var(--border);
                 margin: 2px;
                 border-radius: 5px;
             }
-            .pallete>*:first-child{
+            .editor-pallete>*:first-child{
                 text-align: center;
                 user-select: none;
             }

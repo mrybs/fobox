@@ -23,6 +23,10 @@ def js(file: _io.BufferedReader) -> HttpResponse:
 def png(file: _io.BufferedReader) -> HttpResponse:
     return HttpResponse(file.read(), content_type='image/png')
 
+@htrf.by_extension('jpg')
+def jpg(file: _io.BufferedReader) -> HttpResponse:
+    return HttpResponse(file.read(), content_type='image/jpeg')
+
 @htrf.by_extension('json')
 def json_handler(file: _io.BufferedReader) -> HttpResponse:
     return HttpResponse(json.dumps(json.load(file), ensure_ascii=False), content_type='application/json')

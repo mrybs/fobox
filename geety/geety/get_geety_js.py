@@ -5,7 +5,7 @@ import inspect
 
 GEETY_JS = ''
 
-with open(os.path.dirname(inspect.getfile(sys.modules[__name__])) + '/geety.js', 'r') as f:
+with open(os.path.dirname(inspect.getfile(sys.modules[__name__])) + '/geety.js', 'r', encoding='utf-8') as f:
     lines = []
     for line in f.readlines():
         if line := line.strip():

@@ -3,4 +3,5 @@ demo
 project.json
 app/views/test.view.xml
 *.zip
-./app/
+app/
+postcard_generator/

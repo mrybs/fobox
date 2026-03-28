@@ -25,6 +25,33 @@
                     </F:PropertyArg>
                 </F:PropertyArgs>
             </F:Property>
+            <F:Property type="VARIANTS" key="justify" name="Выравнивание">
+                <F:PropertyOnLoad>
+                    <![CDATA[ 
+                        (element) => {
+                            let justifyContent = element.style.justifyContent
+                            if (!['left', 'center', 'right'].includes(justifyContent)){
+                                return 'left'
+                            }
+                            return justifyContent
+                        }
+                    ]]>
+                </F:PropertyOnLoad>
+                <F:PropertyOnChange>
+                    <![CDATA[ 
+                        (element, value) => {
+                            element.style.justifyContent = value
+                        }
+                    ]]>
+                </F:PropertyOnChange>
+                <F:PropertyArgs>
+                    <F:PropertyArg type="map" name="options">
+                        <F:PropertyValue key="left">слева</F:PropertyValue>
+                        <F:PropertyValue key="center">по центру</F:PropertyValue>
+                        <F:PropertyValue key="right">справа</F:PropertyValue>
+                    </F:PropertyArg>
+                </F:PropertyArgs>
+            </F:Property>
         </F:Properties>
 
         <style>

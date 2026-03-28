@@ -5,4 +5,3 @@ venv/
 .vscode/
 image/
 fobox-orm/main.py
-dev/app/

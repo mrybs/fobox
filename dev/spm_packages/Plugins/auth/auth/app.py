@@ -28,7 +28,7 @@ for db in ProjectAPI.get_config()['dbs']:
         case 'postgres':
             gapp.add_database_pool(Postgres(
                 db['dsn'],
-                server_settings=db['server_settings']
+                server_settings=db['serverSettings']
             ))
 db = gapp.db_pools[0]
 

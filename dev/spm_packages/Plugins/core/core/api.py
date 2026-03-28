@@ -10,7 +10,7 @@ match get_driver_name(db['dsn']):
     case 'postgres':
         db = Postgres(
             db['dsn'],
-            server_settings=db['server_settings']
+            server_settings=db['serverSettings']
         )
 
 

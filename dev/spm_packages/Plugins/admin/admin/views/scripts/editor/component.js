@@ -20,7 +20,10 @@ class Component {
                 <span class="material-symbols-outlined editor-component-properties-button">page_info</span>
                 ${this.name}
             </div>
-            <div class="editor-component-content">${innerHTML}</div>
+            <div class="editor-component-content">
+                <img class="editor-component-preview" src="/fobox/previews/${this.gtag}" draggable="false">
+                ${innerHTML}
+            </div>
         `
         this.header = this.element.getElementsByClassName('editor-component-header')[0]
         this.propertiesButton = this.header.getElementsByClassName('editor-component-properties-button')[0]

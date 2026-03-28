@@ -21,15 +21,16 @@ class ConfigMigration(Migration):
             'dbs': [
                 {
                     'dsn': dsn,
-                    'server_settings': {
+                    'serverSettings': {
                         'search_path': scheme
                     }
                 }
             ],
             'smtp': {
-                'server_host': smtp_host,
-                'server_port': 587,
+                'serverHost': smtp_host,
+                'serverPort': 587,
                 'address': smtp_address,
                 'password': smtp_password
-            }
+            },
+            'configMigrationRequired': False
         })

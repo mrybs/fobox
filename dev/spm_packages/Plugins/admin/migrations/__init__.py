@@ -14,6 +14,6 @@ class AdminBaseMigration(Migration, ABC):
             case 'postgres':
                 self.fobox_db = Postgres(
                     db['dsn'],
-                    server_settings=db['server_settings']
+                    server_settings=db['serverSettings']
                 )
         self._initialized = True

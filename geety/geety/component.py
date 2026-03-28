@@ -329,7 +329,7 @@ class Component:
                 if self.tag not in page.components or self.is_def():
                     for child in self:
                         if type(child) is str:
-                            html += await var_pattern_apply_content(child.strip(), context, page, prevs+[self])
+                            html += await var_pattern_apply_content(child, context, page, prevs+[self])
                         else:
                             html += await child.render(page, context, prevs+[self])
                 elif self.tag in page.components and not self.is_def():

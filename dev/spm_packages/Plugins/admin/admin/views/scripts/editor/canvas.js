@@ -11,22 +11,7 @@ class Canvas {
             'View',
             '<div class="editor-root-component" style="display:flex;flex-wrap:wrap;align-content:flex-start"></div>',
             '.editor-root-component',
-            [
-                new Property(PropertyTypes.VARIANTS, 'direction', 'Направление', 
-                    (element) => {
-                        return (element.style.flexDirection == 'column') ? 'column' : 'row'
-                    },
-                    (element, value) => {
-                        element.style.flexDirection = (value == 'row' ? 'row' : 'column')
-                    },
-                    {
-                        options: new Map([
-                            ['row', 'по горизонтали'],
-                            ['column', 'по вертикали']
-                        ])
-                    }
-                )
-            ]
+            []
         )
         this.root_component.element.setAttribute('draggable', false)
         this.element.appendChild(this.root_component.element)

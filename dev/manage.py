@@ -246,29 +246,7 @@ def migrate_app_command(args):
 
 @root_command.subcommand('makemigrations')
 def apply_all_migrations(args):
-    migrations = {
-        migration.cls.__name__: migration
-        for migration in load_migrations(
-            os.path.dirname(__file__),
-            ProjectAPI.get_name(),
-            False
-        )
-    }
-
-    exec(';'.join(load_imports(cfg['apps'], plugins_zip, plugins_dir, cfg['debug'])))
-
-    for key in plugins_zip | plugins_dir:
-        is_zip = (plugins_zip | plugins_dir)[key]['zip']
-        migrations.update({
-            migration.cls.__name__ + f'.{key}': migration
-            for migration in load_migrations(
-                os.path.join(os.path.dirname(__file__), f'spm_packages/Plugins/{key}' + ('.zip' if is_zip else '')),
-                key,
-                is_zip
-            )
-        })
-
-    print(f'{BLUE}Found {len(migrations)} migrations{RESET}')
+    migrations = {}
 
     async def check_and_apply_migration(migration_meta):
         migration = migration_meta.cls()
@@ -282,12 +260,43 @@ def apply_all_migrations(args):
             await migration.apply()
         else:
             print(f'{RED}-{RESET}')
+        if migration_meta.is_zip:
+            exec(';'.join(load_imports((), (migration_meta.package_key, ), (), cfg['debug'])))
+        else:
+            exec(';'.join(load_imports((), (), (migration_meta.package_key, ), cfg['debug'])))
         migration_meta.set_applied()
+
+    for key in plugins_zip | plugins_dir:
+        is_zip = (plugins_zip | plugins_dir)[key]['zip']
+        _migrations = {
+            migration.cls.__name__ + f'.{key}': migration
+            for migration in load_migrations(
+                os.path.join(os.path.dirname(__file__), f'spm_packages/Plugins/{key}' + ('.zip' if is_zip else '')),
+                key,
+                is_zip
+            )
+        }
+        migrations.update(_migrations)
+        for migration_meta in _migrations.values():
+            if migration_meta.applied:
+                continue
+            asyncio.run(check_and_apply_migration(migration_meta))
+    
+    migrations.update({
+        migration.cls.__name__: migration
+        for migration in load_migrations(
+            os.path.dirname(__file__),
+            ProjectAPI.get_name(),
+            False
+        )
+    })
 
     for migration_meta in migrations.values():
         if migration_meta.applied:
             continue
         asyncio.run(check_and_apply_migration(migration_meta))
+    
+    print(f'{BLUE}Found {len(migrations)} migrations total{RESET}')
 
 
 @root_command.command_not_exists()

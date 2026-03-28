@@ -13,8 +13,8 @@
         <div>
             <SidePane type="'left'" class="'sidepane-with-footer'">
                 <div>
-                    <a href="/fobox">Главная</a>
-                    <a href="/fobox/pages">Страницы</a>
+                    <a onclick="G.redirect(`/fobox`)">Главная</a>
+                    <a onclick="G.redirect(`/fobox/pages`)">Страницы</a>
                 </div>
                 <div>
                    © "Миот" 2026
