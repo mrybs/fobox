@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<Geety xmlns:G="Geety" xmlns:F="Fobox">
+    <Image G:Extends="img">
+        <F:Name>Изображение</F:Name>
+        <F:Properties>
+            <F:Property type="TEXT" key="src" name="URL">
+                <F:PropertyOnLoad>
+                    <![CDATA[ 
+                        (element) => {
+                            return element.src || ''
+                        }
+                    ]]>
+                </F:PropertyOnLoad>
+                <F:PropertyOnChange>
+                    <![CDATA[ 
+                        (element, value) => {
+                            element.src = value
+                        }
+                    ]]>
+                </F:PropertyOnChange>
+            </F:Property>
+            <F:Property type="TEXT" key="alt" name="Альт. текст">
+                <F:PropertyOnLoad>
+                    <![CDATA[ 
+                        (element) => {
+                            return element.alt || ''
+                        }
+                    ]]>
+                </F:PropertyOnLoad>
+                <F:PropertyOnChange>
+                    <![CDATA[ 
+                        (element, value) => {
+                            element.alt = value
+                        }
+                    ]]>
+                </F:PropertyOnChange>
+            </F:Property>
+        </F:Properties>
+    </Image>
+</Geety>

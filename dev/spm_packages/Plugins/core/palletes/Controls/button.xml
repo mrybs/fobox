@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<Geety xmlns:G="Geety" xmlns:F="Fobox">
+    <Button G:Extends="button">
+        <F:Name>Кнопка</F:Name>
+        <F:Properties>
+            <F:Property type="TEXT" key="text" name="Текст">
+                <F:PropertyOnLoad>
+                    <![CDATA[ 
+                        (element) => {
+                            return element.innerText
+                        }
+                    ]]>
+                </F:PropertyOnLoad>
+                <F:PropertyOnChange>
+                    <![CDATA[ 
+                        (element, value) => {
+                            element.innerText = value
+                        }
+                    ]]>
+                </F:PropertyOnChange>
+            </F:Property>
+        </F:Properties>
+        Нажми меня
+    </Button>
+</Geety>

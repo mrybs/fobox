@@ -5,6 +5,14 @@
             "path": "Containers"
         },
         {
+            "name": "Отображение",
+            "path": "Displays"
+        },
+        {
+            "name": "Управление",
+            "path": "Controls"
+        },
+        {
             "name": "Текст",
             "path": "Texts"
         },

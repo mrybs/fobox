@@ -133,6 +133,8 @@ class Component:
                 for arg in component.find_all_by_tag('{Geety}Arg')
             }, context, page, prevs+[self]))
             if component.is_def():
+                self.args.pop('id', None)
+                self.args.pop('class', None)
                 merge_dicts(signature, eval_args(await var_pattern_apply_args(self.args, context, page, prevs+[self])))
                 merge_dicts(context, signature)
         cargs = await var_pattern_apply_args(component.args, context, page, prevs+[self])
@@ -324,7 +326,9 @@ class Component:
             case '{Fobox}Name': ...  # skip
             case _:
                 if self.tag in page.components and not self.is_def():
-                    cargs['class'] = cargs.get('class', '') + ' ' + self.uid
+                    cargs['class'] = cargs.get('class', '') + ' ' + sargs.get('class', '') + ' ' + self.uid
+                if not cargs.get('id') and 'id' in sargs:
+                    cargs['id'] = sargs['id']
                 html += f'<{tag} {' '.join([f"{key}=\"{val}\"" for key, val in cargs.items()])}>' if not self.is_def() else ''
                 if self.tag not in page.components or self.is_def():
                     for child in self:

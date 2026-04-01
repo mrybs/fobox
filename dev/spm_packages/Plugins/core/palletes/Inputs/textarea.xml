@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<Geety xmlns:G="Geety" xmlns:F="Fobox">
+    <TextArea G:Extends="textarea">
+        <F:Name>Текстовая область</F:Name>
+        <F:Properties>
+            <F:Property type="TEXT" key="value" name="Текст">
+                <F:PropertyOnLoad>
+                    <![CDATA[ 
+                        (element) => {
+                            return element.value
+                        }
+                    ]]>
+                </F:PropertyOnLoad>
+                <F:PropertyOnChange>
+                    <![CDATA[ 
+                        (element, value) => {
+                            element.value = value
+                        }
+                    ]]>
+                </F:PropertyOnChange>
+            </F:Property>
+        </F:Properties>
+    </TextArea>
+</Geety>
