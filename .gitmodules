@@ -1,3 +1,9 @@
 [submodule "slinn"]
 	path = slinn
 	url = https://github.com/OpenMiot/slinn.git
+[submodule "geety"]
+	path = geety
+	url = https://github.com/OpenMiot/geety.git
+[submodule "fobox-orm"]
+	path = fobox-orm
+	url = https://github.com/OpenMiot/fobox-orm.git
