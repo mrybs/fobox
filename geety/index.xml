@@ -1,6 +1,0 @@
-<?xml version="1.0"?>
-<Geety xmlns:Geety="Geety">
-    <App>
-        <Card title="Geety test" image="example.png"></Card>
-    </App>
-</Geety>
