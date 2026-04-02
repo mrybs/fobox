@@ -30,12 +30,12 @@
 # Установка пакета с HTTP-фреймворком
 pip install git+https://github.com/OpenMiot/slinn@nukeful
 
-slinn create www  # вместо www название папки с проектом
+slinn-admin create-project www  # вместо www название папки с проектом
 cd www
 venv/Scripts/activate
 
 # Установка пакета с языком Geety и ORM, а также пакета для хеширования паролей
-py -m pip install geety[postgres] bcrypt
+pip install geety[postgres] bcrypt
 
 # Установка основных плагинов конструктора 
 # Здесь при запросе необходимо нажать Enter
@@ -44,7 +44,7 @@ spm install core@fobox.core auth@fobox.core admin@fobox.core fobox-app@fobox.cor
 slinn template fobox-app app
 
 # Применение миграций
-slinn makemigrations
+slinn migrate-all
 ```
 Последняя команда вас попросит указать данные для подключения к БД, к почтовому сервису и создаст учетную запись администратора, следуйте инструкциям
 
