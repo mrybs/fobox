@@ -23,12 +23,11 @@
 Для работы конструктора на ПК или сервер установите:
 - Python 3.14 и выше
 - PostgreSQL
-- Git
 
 Откройте командную строку Windows, введите:
 ```sh
 # Установка пакета с HTTP-фреймворком
-pip install git+https://github.com/OpenMiot/slinn@nukeful
+pip install slinn
 
 slinn-admin create-project www  # вместо www название папки с проектом
 cd www

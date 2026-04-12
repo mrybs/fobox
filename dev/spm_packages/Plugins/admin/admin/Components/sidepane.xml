@@ -18,6 +18,7 @@
                 max-height: calc(100vh - 45px - 30px);
                 position: sticky;
                 top: calc(45px + 15px);
+                justify-content: space-between;
             }
             .sidepane, .sidepane div{
                 display: flex;
@@ -26,6 +27,7 @@
             .sidepane>a, .sidepane div>a{
                 text-decoration: none;
                 padding: 5px;
+                cursor: pointer;
             }
             .sidepane>a:hover, .sidepane div>a:hover{
                 text-decoration: underline;

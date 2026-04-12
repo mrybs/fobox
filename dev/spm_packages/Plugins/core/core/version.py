@@ -3,7 +3,7 @@ from string import ascii_uppercase
 import platform
 
 
-__PD, __PI = datetime(2026, 4, 1), 1
+__PD, __PI = datetime(2026, 4, 1), 2
 
 VERSION = {
     'name': 'Fobox',
