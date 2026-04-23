@@ -37,4 +37,4 @@ class CreateAdminMigration(AdminBaseMigration):
                 'role': 2
             }, returning=('id',))
             print(f'\033[92mУчетная запись \033[1m#{user_id["id"]}\033[22m создана\033[0m')
-        await self.fobox_db._pool.close()
+        await self.fobox_db.close()

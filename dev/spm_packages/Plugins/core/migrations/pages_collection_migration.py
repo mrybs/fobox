@@ -19,4 +19,4 @@ class PagesCollectionMigration(CoreBaseMigration):
                     );
                 """
             )
-        await self.fobox_db._pool.close()
+        await self.fobox_db.close()

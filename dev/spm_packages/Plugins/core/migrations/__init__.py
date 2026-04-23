@@ -1,7 +1,6 @@
 from abc import ABC
 from slinn import Migration, ProjectAPI
 from orm import get_driver_name
-from orm.postgres import Postgres
 
 
 class CoreBaseMigration(Migration, ABC):
@@ -12,10 +11,17 @@ class CoreBaseMigration(Migration, ABC):
         db = ProjectAPI.get_config()['dbs'][0]
         match get_driver_name(db['dsn']):
             case 'postgres':
+                from orm.postgres import Postgres
                 self.fobox_db = Postgres(
                     db['dsn'],
                     server_settings=db['serverSettings']
                 )
+            case 'sqlite':
+                from orm.sqlite import SQLite
+                self.fobox_db = SQLite(
+                    db['dsn']
+                )
+
         self._initialized = True
 
     @property

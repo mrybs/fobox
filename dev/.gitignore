@@ -5,3 +5,4 @@ app/views/test.view.xml
 *.zip
 app/
 postcard_generator/
+db.sqlite3

@@ -1,7 +1,10 @@
 <?xml version="1.0"?>
 <Geety xmlns:G="Geety">
     <FoboxBase>
-        <G:Page locale="ru_RU"/>
+        <G:Page
+            locale="ru_RU"
+            favicon="/fobox/res/fobox192.png"
+        />
         <link href="/fobox/styles/root.css" rel="stylesheet" type="text/css"/>
         <link href="/fobox/styles/styles.css" rel="stylesheet" type="text/css"/>
         <link href="/fobox/styles/modal.css" rel="stylesheet" type="text/css"/>

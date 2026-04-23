@@ -13,7 +13,7 @@
                 </F:PropertyOnLoad>
                 <F:PropertyOnChange>
                     <![CDATA[ 
-                        (element, value) => {
+                        (element, value='Нажми меня') => {
                             element.innerText = value
                         }
                     ]]>

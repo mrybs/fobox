@@ -5,10 +5,7 @@
         <G:Page
             title="Панель администратора | Fobox"
             robots="noindex, nofollow"/>
-        <Header>
-            <h1 onclick="G.redirect(`/fobox`)">fobox</h1>
-            <span><span class="material-symbols-outlined">person</span>$USER.name</span>
-        </Header>
+        <Header/>
 
         <div>
             <SidePane type="'left'" class="'sidepane-with-footer'">

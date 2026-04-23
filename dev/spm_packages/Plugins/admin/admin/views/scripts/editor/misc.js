@@ -105,5 +105,5 @@ function createNode (html) {
 }
 
 function escapeXML(xml) {
-    return xml.replaceAll('"', '&quot;').replaceAll('\'', '&apos;')
+    return xml.replaceAll('&', '&amp;').replaceAll('"', '&quot;').replaceAll('\'', '&apos;')
 }

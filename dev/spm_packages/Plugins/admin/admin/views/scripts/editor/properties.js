@@ -19,7 +19,7 @@ class Properties {
             let property_element = document.createElement('div')
             property_element.classList.add('editor-property')
             property_element.innerHTML = `<span class="editor-property-label">${property.name}</span>`
-            let element = component.body.querySelector('*')
+            let element = component.body.querySelector('*:not(.editor-component-preview)')
             switch (property.type){
                 case PropertyTypes.TEXT: {
                     let input = document.createElement('input')

@@ -261,7 +261,7 @@ class Component {
     setProperties (properties) {
         this.properties.forEach(property => {
             if (Object.hasOwn(properties, property.key)){
-                property.onchange(this.body.querySelector('*'), properties[property.key])
+                property.onchange(this.body.querySelector('*:not(.editor-component-preview)'), properties[property.key])
             }  
         })
     }

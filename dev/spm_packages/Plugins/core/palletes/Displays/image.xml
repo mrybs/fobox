@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <Geety xmlns:G="Geety" xmlns:F="Fobox">
-    <Image G:Extends="img">
+    <Image G:Extends="img" src="/fobox/res/fobox192.png">
         <F:Name>Изображение</F:Name>
         <F:Properties>
             <F:Property type="TEXT" key="src" name="URL">

@@ -1,6 +1,5 @@
 from slinn import ApiDispatcher, AsyncRequest, Storage, HttpResponse, HttpGETRedirect, HttpJSONResponse, HttpRender, ProjectAPI
 from . import app
-from orm.postgres import Postgres
 from orm import get_driver_name
 from core import email_tools
 import geety as G
@@ -26,9 +25,15 @@ components = Storage('Components', package=__package__)
 for db in ProjectAPI.get_config()['dbs']:
     match get_driver_name(db['dsn']):
         case 'postgres':
+            from orm.postgres import Postgres
             gapp.add_database_pool(Postgres(
                 db['dsn'],
                 server_settings=db['serverSettings']
+            ))
+        case 'sqlite':
+            from orm.sqlite import SQLite
+            gapp.add_database_pool(SQLite(
+                db['dsn']
             ))
 db = gapp.db_pools[0]
 

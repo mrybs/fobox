@@ -1,5 +1,4 @@
 from slinn import ApiDispatcher, AsyncRequest, HttpResponse, ProjectAPI
-from orm.postgres import Postgres
 from orm import get_driver_name
 import json
 
@@ -8,9 +7,15 @@ dp = ApiDispatcher(prefix='api')
 db = ProjectAPI.get_config()['dbs'][0]
 match get_driver_name(db['dsn']):
     case 'postgres':
+        from orm.postgres import Postgres
         db = Postgres(
             db['dsn'],
             server_settings=db['serverSettings']
+        )
+    case 'sqlite':
+        from orm.sqlite import SQLite
+        db = SQLite(
+            db['dsn']
         )
 
 

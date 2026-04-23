@@ -33,4 +33,4 @@ class RolesMigration(CoreBaseMigration):
                 'name': 'admin',
                 'display_name': 'Администратор'
             })
-        await self.fobox_db._pool.close()
+        await self.fobox_db.close()

@@ -7,6 +7,7 @@ import functools
 import json
 import urllib.parse
 import geety as G
+import datetime
 
 
 dp = ApiDispatcher('localhost', prefix='fobox')
@@ -119,8 +120,8 @@ async def get_pages(request: AsyncRequest, user: dict):
                     'path': page['path'],
                     'creator_id': page['creator_id'],
                     'enabled': page['enabled'],
-                    'created_at': page['created_at'].timestamp(),
-                    'updated_at': page['updated_at'].timestamp()
+                    'created_at': datetime.datetime.fromisoformat(page['created_at']).timestamp(),
+                    'updated_at': datetime.datetime.fromisoformat(page['updated_at']).timestamp()
                 }
                 for page in await conn._fobox_pages.find({})
             ], ensure_ascii=False
@@ -249,4 +250,7 @@ dp  .static('/styles/root.css', HttpRender, 'styles/root.css', storage=views)\
     .static('/styles/editor/trash.css', HttpRender, 'styles/editor/trash.css', storage=views)\
     .static('/scripts/editor.js', HttpRender, 'scripts/editor.js', storage=views)\
     .static('/scripts/modal.js', HttpRender, 'scripts/modal.js', storage=views)\
-    .static('/res/cover.png', HttpRender, 'res/cover.png', storage=views)
+    .static('/res/cover.png', HttpRender, 'res/cover.png', storage=views)\
+    .static('/res/fobox192.png', HttpRender, 'res/fobox192.png', storage=views)\
+    .static('/res/fobox-alt32.png', HttpRender, 'res/fobox-alt32.png', storage=views)\
+    .static('/res/fobox-alt192.png', HttpRender, 'res/fobox-alt192.png', storage=views)

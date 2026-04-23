@@ -21,6 +21,10 @@
                 font-size: 24px;
                 font-weight: 900;
             }
+            #header>h1>img {
+                margin: 0 7px 0 0;
+                vertical-align: bottom;
+            }
             #header-menu:has(*) {
                 border-left: 1px solid black;
             }
@@ -47,7 +51,7 @@
             }
         </script>
 
-        <h1 onclick="G.redirect(`/fobox`)">Фобокс</h1>
+        <h1 onclick="G.redirect(`/fobox`)"><img src="/fobox/res/fobox-alt32.png"/>Фобокс</h1>
         <div id="header-menu"></div>
         <span><span class="material-symbols-outlined">person</span>$USER.name</span>
     </Header>
